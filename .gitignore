@@ -1,0 +1,15 @@
+# Build directories
+__pycache__
+*.egg-info/
+Testing
+build
+.tox
+
+# Python virtual env
+.venv/
+
+# Dynamic version number from setuptools_scm
+**/_version.py
+
+# Dynamic ctest file generated
+**/CTestTestfile.cmake

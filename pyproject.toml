@@ -1,0 +1,68 @@
+[build-system]
+requires = [
+    "setuptools>=40",
+    "setuptools-scm<7",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pybatch"
+description = "Python module for job management on remote computers."
+readme = "README.md"
+authors = [
+    { name = "Ovidiu MIRCESCU", email = "ovidiu.mircescu@edf.fr" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "importlib-metadata; python_version<'3.8'",
+]
+dynamic = ["version"]
+
+[project.scripts]
+
+#[project.entry-points."pybatch.plugins"]
+
+[project.optional-dependencies]
+dev = [
+    "tox < 4.0;python_version<'3.9'",
+    "tox >= 4.0",
+]
+docs = [
+    "sphinx",
+    "sphinxcontrib-programoutput",
+    "docutils<0.21", # reprunicode needed by sphinx_sizzle_theme is removed in version 0.21
+    "sphinx_sizzle_theme",
+    "sphinxcontrib.programoutput",
+]
+lint = [
+    "ruff >= 0.1.8"
+]
+type = [
+    "mypy >= 0.991"
+]
+test = [
+    "pytest >= 7",
+    "pytest-timeout",
+    "pytest-html",
+    "pytest-sugar >= 0.9.7",
+]
+
+[tool.setuptools_scm]
+write_to = "src/pybatch/_version.py"
+
+[tool.ruff]
+exclude = ["doc"]
+line-length = 120
+indent-width = 4
+
+[tool.ruff.lint]
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
