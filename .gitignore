@@ -7,9 +7,3 @@ build
 
 # Python virtual env
 .venv/
-
-# Dynamic version number from setuptools_scm
-**/_version.py
-
-# Dynamic ctest file generated
-**/CTestTestfile.cmake

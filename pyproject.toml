@@ -1,13 +1,12 @@
 [build-system]
 requires = [
-    "setuptools>=40",
-    "setuptools-scm<7",
+    "setuptools",
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "pybatch"
-description = "Python module for job management on remote computers."
+description = "Job management on remote computers."
 readme = "README.md"
 authors = [
     { name = "Ovidiu MIRCESCU", email = "ovidiu.mircescu@edf.fr" },
@@ -16,11 +15,11 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 dependencies = [
-    "importlib-metadata; python_version<'3.8'",
 ]
-dynamic = ["version"]
+#dynamic = ["version"]
+version = "0.0"
 
 [project.scripts]
 
@@ -33,10 +32,6 @@ dev = [
 ]
 docs = [
     "sphinx",
-    "sphinxcontrib-programoutput",
-    "docutils<0.21", # reprunicode needed by sphinx_sizzle_theme is removed in version 0.21
-    "sphinx_sizzle_theme",
-    "sphinxcontrib.programoutput",
 ]
 lint = [
     "ruff >= 0.1.8"
@@ -46,17 +41,15 @@ type = [
 ]
 test = [
     "pytest >= 7",
-    "pytest-timeout",
-    "pytest-html",
-    "pytest-sugar >= 0.9.7",
+    "pytest-xdist",   # pytest -n auto
+    "pytest-timeout", # pytest --timeout=300
+    "pytest-html",    # html reports
+    "pytest-sugar",   # progress bar & better look output
 ]
-
-[tool.setuptools_scm]
-write_to = "src/pybatch/_version.py"
 
 [tool.ruff]
 exclude = ["doc"]
-line-length = 120
+line-length = 80
 indent-width = 4
 
 [tool.ruff.lint]
