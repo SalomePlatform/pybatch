@@ -15,19 +15,21 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-requires-python = ">=3.8"
+# python 3.9 needed for 'list[str]' syntaxe.
+requires-python = ">=3.9"
 dependencies = [
 ]
-#dynamic = ["version"]
 version = "0.0"
 
 [project.scripts]
 
-#[project.entry-points."pybatch.plugins"]
+[project.entry-points."pybatch.plugins"]
+local = "pybatch.plugins.local.plugin:Plugin"
+slurm = "pybatch.plugins.slurm.plugin:Plugin"
+sshhost = "pybatch.plugins.sshhost.plugin:Plugin"
 
 [project.optional-dependencies]
 dev = [
-    "tox < 4.0;python_version<'3.9'",
     "tox >= 4.0",
 ]
 docs = [

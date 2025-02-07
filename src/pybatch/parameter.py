@@ -1,0 +1,52 @@
+from dataclasses import dataclass, field
+
+@dataclass
+class LaunchParameters:
+    """ Parameters of a job to be launched.
+    
+    List of parameters :
+    
+      * batch_script - local path of the script to be run by the job.
+      * work_directory - remote work directory
+      * batch_args - arguments for batch_script
+      * host - remote host where the job will be launched
+      * user - user name if needed.
+      * name - name of the job
+      * nnodes - number of required nodes, 0 for undefined.
+      * ntasks - number of required tasks, 0 for undefined
+      * exclusive - activate exclusive mode.
+      * wall_time - maximum time of the job.
+        Acceptable time formats include "minutes", "minutes:seconds",
+        "hours:minutes:seconds", "days-hours", "days-hours:minutes" and
+        "days-hours:minutes:seconds".
+      * mem_per_node - memory required per node (ex. "32G")
+      * mem_per_cpu - minimum memory required per usable allocated CPU.
+      * queue - required queue.
+      * partition - required partition
+      * wckey
+      * extra_as_string - extra parameters as a string
+        (ex. "#SBATCH --cpus-per-task=4")
+      * extra_as_list - extra parameters as a list (ex. ["--cpus-per-task=4"])
+      * preprocess - local path of a script to be launched remotely before the
+        job.
+      * input_files - list of local files to be copied to remote work_directory
+    """
+    batch_script: str
+    work_directory: str
+    batch_args: str = ""
+    host: str = ""
+    user: str = ""
+    name: str = ""
+    nnodes: int = 0
+    ntasks: int = 0
+    exclusive: bool = False
+    wall_time: str = ""
+    mem_per_node: str = ""
+    mem_per_cpu: str = ""
+    queue: str = ""
+    partition: str = ""
+    wckey: str = ""
+    extra_as_string: str = ""
+    extra_as_list: list[str] = field(default_factory=list)
+    preprocess: str = ""
+    input_files: list[str] = field(default_factory=list)
