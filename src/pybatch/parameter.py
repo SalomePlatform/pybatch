@@ -33,7 +33,7 @@ class LaunchParameters:
     """
     batch_script: str
     work_directory: str
-    batch_args: str = ""
+    batch_args: list[str] = field(default_factory=list)
     host: str = ""
     user: str = ""
     name: str = ""

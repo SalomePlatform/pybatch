@@ -18,10 +18,12 @@ classifiers = [
 # python 3.9 needed for 'list[str]' syntaxe.
 requires-python = ">=3.9"
 dependencies = [
+    "psutil"
 ]
 version = "0.0"
 
 [project.scripts]
+pybatch_run = "pybatch.plugins.local.pybatch_run:main" # local batch manager
 
 [project.entry-points."pybatch.plugins"]
 local = "pybatch.plugins.local.plugin:Plugin"

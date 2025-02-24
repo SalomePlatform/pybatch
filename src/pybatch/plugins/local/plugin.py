@@ -8,5 +8,4 @@ class Plugin:
         return """Local execution without any batch manager."""
     
     def create_job(self, param: LaunchParameters) -> GenericJob :
-        # TODO
-        return Job()
+        return Job(param)
