@@ -10,6 +10,11 @@ import argparse
 import os
 import subprocess
 from pathlib import Path
+import signal
+import functools
+
+def handler(proc, signum, frame):
+    proc.terminate()
 
 def main():
     parser = argparse.ArgumentParser(description="Run a local job.")
@@ -21,8 +26,11 @@ def main():
     work_directory = os.path.realpath(os.path.dirname(args.config))
 
     # TODO deal with wall time, memory & number of cpus
-    command = [Path(work_directory) / options["batch_script"]]
-    command += options["batch_args"]
+    command = options["command"]
+    if "wall_time" in options:
+        wall_time = int(options["wall_time"])
+    else:
+        wall_time = None
     log_path = Path(work_directory) / "logs"
     log_path.mkdir(parents=True, exist_ok=True)
     stdout_log = log_path / "output.log"
@@ -34,7 +42,12 @@ def main():
     proc = subprocess.Popen(command,
                             cwd=work_directory,
                             stdout=stdout_file, stderr=stderr_file)
-    exit_code = proc.wait()
+    signal.signal(signal.SIGTERM, functools.partial(handler, proc))
+    try:
+        exit_code = proc.wait(wall_time)
+    except subprocess.TimeoutExpired:
+        proc.terminate()
+        exit_code = proc.wait()
     exit_log = log_path / "exit_code.log"
     with open(exit_log, "w") as exit_file:
         exit_file.write(str(exit_code))

@@ -4,15 +4,14 @@ import shutil
 import subprocess
 import psutil
 import json
-#import os
 
 class Job(GenericJob):
     def __init__(self,  param: LaunchParameters):
-        self.batch_script = param.batch_script
+        self.command = param.command
         self.work_directory = param.work_directory
-        self.batch_args = param.batch_args
         self.preprocess = param.preprocess
         self.input_files = param.input_files
+        self.wall_time = param.wall_time
         self.pid = -1 # job not launched
         # TODO We could also use ntasks, wall_time and mem_per_node to set
         # limits using resource module.
@@ -23,30 +22,15 @@ class Job(GenericJob):
 
         If the submission fails, raise an exception.
         """
-        # create work directory
         Path(self.work_directory).mkdir(parents=True, exist_ok=True)
-        # copy files
         for fi in self.input_files:
             # TODO deal with directories & relative paths
             shutil.copy(fi, self.work_directory)
-        shutil.copy(self.batch_script, self.work_directory)
-        # create job config file
-        config = {
-            "batch_script":self.batch_script,
-            "batch_args":self.batch_args,
-            }
+        config = self.config()
         config_path = Path(self.work_directory) / "pybatch_conf.json"
         with open(config_path, "w") as config_file:
             json.dump(config, config_file)
-        ## copy launcher
-        #current_file_dir = os.path.dirname(__file__)
-        #current_file_dir = os.path.realpath(current_file_dir)
-        #launcher_file = Path(current_file_dir) / "pybatch_run.py"
-        #shutil.copy(launcher_file, self.work_directory)
-        #os.chmod(
-        # launch batch script
         proc = subprocess.Popen(["pybatch_run", config_path])
-        # set pid
         self.pid = proc.pid
 
     def wait(self)-> None:
@@ -69,7 +53,7 @@ class Job(GenericJob):
     def cancel(self)-> None:
         " Stop the job."
         pu = psutil.Process(self.pid)
-        pu.kill()
+        pu.terminate()
 
     def get_file(self, remote_path:str, local_path:str)-> None:
         """ Copy a file from the remote work directory.
@@ -84,13 +68,17 @@ class Job(GenericJob):
             abs_remote_path = os.path.realpath(abs_remote_path)
             shutil.copy(abs_remote_path, local_path)
 
+    def config(self) -> dict:
+        cfg = {
+                "command":self.command,
+              }
+        if self.wall_time:
+            cfg["wall_time"] = self.wall_time
+        return cfg
+
     def batch_file(self) -> str:
         " Get the content of the batch file submited to the batch manager."
-        config = {
-            "batch_script":self.batch_script,
-            "batch_args":self.batch_args,
-            }
-        return json.dumps(config)
+        return json.dumps(self.config())
 
     # A réfléchir, mais il vaut peut-être mieux utiliser la sérialisation
     # pickle.

@@ -6,9 +6,8 @@ class LaunchParameters:
     
     List of parameters :
     
-      * batch_script - local path of the script to be run by the job.
+      * command - full command to run with arguments as a list.
       * work_directory - remote work directory
-      * batch_args - arguments for batch_script
       * host - remote host where the job will be launched
       * user - user name if needed.
       * name - name of the job
@@ -31,9 +30,8 @@ class LaunchParameters:
         job.
       * input_files - list of local files to be copied to remote work_directory
     """
-    batch_script: str
+    command: list[str]
     work_directory: str
-    batch_args: list[str] = field(default_factory=list)
     host: str = ""
     user: str = ""
     name: str = ""

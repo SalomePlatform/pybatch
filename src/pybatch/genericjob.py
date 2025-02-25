@@ -38,5 +38,5 @@ class GenericJob(Protocol):
     # A réfléchir, mais il vaut peut-être mieux d'utiliser la sérialisation
     # pickle.
     def dump(self) -> str:
-        " Serialization of the job."
+        " Serialization of the job in a humanly readable format."
         ...
