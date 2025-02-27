@@ -2,6 +2,7 @@ __all__ = [
     "GenericJob",
     "LaunchParameters",
     "create_job",
+    "PybatchException",
 ]
 from .genericjob import GenericJob
 from .parameter import LaunchParameters
@@ -18,3 +19,6 @@ except PackageNotFoundError:  # pragma: no cover
     __version__ = "unknown"
 finally:
     del version, PackageNotFoundError
+
+class PybatchException(Exception):
+    pass

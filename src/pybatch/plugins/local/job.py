@@ -1,9 +1,23 @@
-from pybatch import GenericJob, LaunchParameters
+from pybatch import GenericJob, LaunchParameters, PybatchException
 from pathlib import Path
 import shutil
 import subprocess
 import psutil
 import json
+import os
+
+def copy(src, dest):
+    """ Recursively copy files and directories."""
+    if os.path.isfile(src):
+        print(f"Copy file {src} to {dest}")
+        shutil.copy(src, dest)
+    elif os.path.isdir(src):
+        src_basename = os.path.basename(src)
+        dest_dir = Path(dest) / src_basename
+        print(f"Copy dir {src} to {dest_dir}")
+        shutil.copytree(src, dest_dir, dirs_exist_ok=True)
+    else:
+        raise PybatchException(f"Path {src} is neither a file, nor a directory.")
 
 class Job(GenericJob):
     def __init__(self,  param: LaunchParameters):
@@ -13,7 +27,7 @@ class Job(GenericJob):
         self.input_files = param.input_files
         self.wall_time = param.wall_time
         self.pid = -1 # job not launched
-        # TODO We could also use ntasks, wall_time and mem_per_node to set
+        # TODO We could also use ntasks and mem_per_node to set
         # limits using resource module.
 
     " Job protocol to be implemented."
@@ -24,8 +38,7 @@ class Job(GenericJob):
         """
         Path(self.work_directory).mkdir(parents=True, exist_ok=True)
         for fi in self.input_files:
-            # TODO deal with directories & relative paths
-            shutil.copy(fi, self.work_directory)
+            copy(fi, self.work_directory)
         config = self.config()
         config_path = Path(self.work_directory) / "pybatch_conf.json"
         with open(config_path, "w") as config_file:
@@ -55,8 +68,8 @@ class Job(GenericJob):
         pu = psutil.Process(self.pid)
         pu.terminate()
 
-    def get_file(self, remote_path:str, local_path:str)-> None:
-        """ Copy a file from the remote work directory.
+    def get(self, remote_path:str, local_path:str)-> None:
+        """ Copy a file or directory from the remote work directory.
 
         :param remote_path: path relative to work directory on the remote host.
         :param local_path: destination of the copy on local file system.
@@ -66,13 +79,14 @@ class Job(GenericJob):
         else:
             abs_remote_path = Path(self.work_directory) / remote_path
             abs_remote_path = os.path.realpath(abs_remote_path)
-            shutil.copy(abs_remote_path, local_path)
+        copy(abs_remote_path, local_path)
 
     def config(self) -> dict:
         cfg = {
                 "command":self.command,
               }
         if self.wall_time:
+            # TODO convert from slurm formats (mm, mm:ss, h:mm:ss, etc.)
             cfg["wall_time"] = self.wall_time
         return cfg
 

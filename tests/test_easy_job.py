@@ -1,6 +1,7 @@
 import tempfile
 from pathlib import Path
 import os
+import shutil
 
 def test_python_script():
     """ Launch a python script which ends without errors.
@@ -24,6 +25,7 @@ def test_python_script():
     assert not error_file.read_text() # empty file expected
     exit_code = Path(workdir)/"logs"/"exit_code.log"
     assert exit_code.read_text() == "0"
+    shutil.rmtree(workdir)
 
 def test_error_script():
     """ Launch a python script which ends in error.
@@ -47,6 +49,7 @@ def test_error_script():
     assert "Oups!" in error_file.read_text()
     exit_code = Path(workdir)/"logs"/"exit_code.log"
     assert exit_code.read_text() == "1"
+    shutil.rmtree(workdir)
 
 def test_state():
     """ Test the state of a job."""
@@ -66,6 +69,7 @@ def test_state():
     exit_code = Path(workdir)/"logs"/"exit_code.log"
     assert exit_code.read_text() == "0"
     assert (Path(workdir)/"wakeup.txt").exists()
+    shutil.rmtree(workdir)
 
 def test_cancel():
     """ Cancel a running job. """
@@ -88,6 +92,7 @@ def test_cancel():
     exit_code = Path(workdir)/"logs"/"exit_code.log"
     #assert not exit_code.exists() or exit_code.read_text() != "0"
     assert exit_code.read_text() == "-15" # not sure for Windows
+    shutil.rmtree(workdir)
 
 def test_serialization():
     """ Serialization / deserialization of a submited job in the same script."""
@@ -106,6 +111,7 @@ def test_serialization():
     assert new_job.state() == 'RUNNING'
     new_job.wait()
     assert new_job.state() == 'FINISHED'
+    shutil.rmtree(workdir)
 
 def test_wall_time():
     """ Job with wall time."""
@@ -125,3 +131,32 @@ def test_wall_time():
     exit_code = Path(workdir)/"logs"/"exit_code.log"
     #assert not exit_code.exists() or exit_code.read_text() != "0"
     assert exit_code.read_text() == "-15" # not sure for Windows
+    shutil.rmtree(workdir)
+
+def test_files_and_directories():
+    """ Job that uses and produces files and directories."""
+    import pybatch
+    workdir = tempfile.mkdtemp(suffix="_pybatchtest")
+    resultdir = tempfile.mkdtemp(suffix="_pybatchtest")
+    current_file_dir = os.path.dirname(__file__)
+    script = Path(current_file_dir) / "scripts" / "code.py"
+    file_input = Path(current_file_dir) / "data" / "input.txt"
+    dir_input = Path(current_file_dir) / "data" / "data"
+    params = pybatch.LaunchParameters(["python3", "code.py", "1"],
+                                      workdir,
+                                      input_files=[script,
+                                                   file_input,
+                                                   dir_input])
+    job = pybatch.create_job("local", params)
+    job.submit()
+    job.wait()
+    error_file = Path(workdir)/"logs"/"error.log"
+    assert not error_file.read_text() # empty file expected
+    exit_code = Path(workdir)/"logs"/"exit_code.log"
+    assert exit_code.read_text() == "0"
+    job.get("output.txt", resultdir)
+    assert (Path(resultdir) / "output.txt").read_text() == "51"
+    job.get("data", resultdir)
+    assert (Path(resultdir) / "data" / "output.txt").read_text() == "69"
+    shutil.rmtree(workdir)
+    shutil.rmtree(resultdir)
