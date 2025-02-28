@@ -5,6 +5,7 @@ resources used by the script (wall time, number of cpus, memory).
 All the arguments are passed through a configuration file.
 This is written in python for portability.
 """
+
 import json
 import argparse
 import os
@@ -15,10 +16,12 @@ import functools
 from typing import Optional
 from types import FrameType
 
-def handler(proc: subprocess.Popen[bytes],
-            signum: int,
-            frame: Optional[FrameType]) -> None:
+
+def handler(
+    proc: subprocess.Popen[bytes], signum: int, frame: Optional[FrameType]
+) -> None:
     proc.terminate()
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run a local job.")
@@ -43,9 +46,9 @@ def main() -> None:
     # (see close_fds argument of Popen).
     stdout_file = open(stdout_log, "w")
     stderr_file = open(stderr_log, "w")
-    proc = subprocess.Popen(command,
-                            cwd=work_directory,
-                            stdout=stdout_file, stderr=stderr_file)
+    proc = subprocess.Popen(
+        command, cwd=work_directory, stdout=stdout_file, stderr=stderr_file
+    )
     signal.signal(signal.SIGTERM, functools.partial(handler, proc))
     try:
         exit_code = proc.wait(wall_time)
@@ -55,6 +58,7 @@ def main() -> None:
     exit_log = log_path / "exit_code.log"
     with open(exit_log, "w") as exit_file:
         exit_file.write(str(exit_code))
+
 
 if __name__ == "__main__":
     main()

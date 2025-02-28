@@ -20,5 +20,6 @@ except PackageNotFoundError:  # pragma: no cover
 finally:
     del version, PackageNotFoundError
 
+
 class PybatchException(Exception):
     pass

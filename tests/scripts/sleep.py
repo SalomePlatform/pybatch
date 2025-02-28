@@ -1,5 +1,6 @@
 import time
 import sys
-time.sleep(int(sys.argv[1]))
 from pathlib import Path
+
+time.sleep(int(sys.argv[1]))
 Path("wakeup.txt").touch()
