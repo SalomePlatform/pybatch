@@ -38,10 +38,10 @@ docs = [
     "sphinx",
 ]
 lint = [
-    "ruff >= 0.1.8"
+    "ruff"
 ]
 type = [
-    "mypy >= 0.991"
+    "mypy"
 ]
 test = [
     "pytest >= 7",

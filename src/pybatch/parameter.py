@@ -1,4 +1,6 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
+from pathlib import Path
 
 @dataclass
 class LaunchParameters:
@@ -31,7 +33,7 @@ class LaunchParameters:
       * input_files - list of local files to be copied to remote work_directory
     """
     command: list[str]
-    work_directory: str
+    work_directory: str|Path
     host: str = ""
     user: str = ""
     name: str = ""
@@ -47,4 +49,4 @@ class LaunchParameters:
     extra_as_string: str = ""
     extra_as_list: list[str] = field(default_factory=list)
     preprocess: str = ""
-    input_files: list[str] = field(default_factory=list)
+    input_files: list[str|Path] = field(default_factory=list)

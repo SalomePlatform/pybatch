@@ -1,3 +1,6 @@
+from __future__ import annotations
+import typing
+
 from pybatch import GenericJob, LaunchParameters, PybatchException
 from pathlib import Path
 import shutil
@@ -6,7 +9,7 @@ import psutil
 import json
 import os
 
-def copy(src, dest):
+def copy(src: str|Path, dest: str|Path) -> None:
     """ Recursively copy files and directories."""
     if os.path.isfile(src):
         print(f"Copy file {src} to {dest}")
@@ -68,7 +71,7 @@ class Job(GenericJob):
         pu = psutil.Process(self.pid)
         pu.terminate()
 
-    def get(self, remote_path:str, local_path:str)-> None:
+    def get(self, remote_path:str|Path, local_path:str|Path)-> None:
         """ Copy a file or directory from the remote work directory.
 
         :param remote_path: path relative to work directory on the remote host.
@@ -81,8 +84,8 @@ class Job(GenericJob):
             abs_remote_path = os.path.realpath(abs_remote_path)
         copy(abs_remote_path, local_path)
 
-    def config(self) -> dict:
-        cfg = {
+    def config(self) -> dict[str, typing.Any]:
+        cfg : dict[str, typing.Any] = {
                 "command":self.command,
               }
         if self.wall_time:
@@ -96,6 +99,6 @@ class Job(GenericJob):
 
     # A réfléchir, mais il vaut peut-être mieux utiliser la sérialisation
     # pickle.
-    def dump(self) -> str:
-        " Serialization of the job."
-        ...
+    #def dump(self) -> str:
+        #" Serialization of the job."
+        #...

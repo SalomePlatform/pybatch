@@ -12,11 +12,15 @@ import subprocess
 from pathlib import Path
 import signal
 import functools
+from typing import Optional
+from types import FrameType
 
-def handler(proc, signum, frame):
+def handler(proc: subprocess.Popen[bytes],
+            signum: int,
+            frame: Optional[FrameType]) -> None:
     proc.terminate()
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Run a local job.")
     parser.add_argument("config", help="Configuration file of the job.")
     args = parser.parse_args()
@@ -25,7 +29,7 @@ def main():
         options = json.load(config_file)
     work_directory = os.path.realpath(os.path.dirname(args.config))
 
-    # TODO deal with wall time, memory & number of cpus
+    # TODO deal with memory & number of cpus
     command = options["command"]
     if "wall_time" in options:
         wall_time = int(options["wall_time"])
