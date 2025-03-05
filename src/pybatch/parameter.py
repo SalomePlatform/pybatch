@@ -52,3 +52,20 @@ class LaunchParameters:
     extra_as_list: list[str] = field(default_factory=list)
     preprocess: str = ""
     input_files: list[str | Path] = field(default_factory=list)
+
+@dataclass
+class ConnexionParameters:
+    """Parameters needed to connect to a remote server.
+
+    List of parameters :
+
+    * host
+    * user
+    * password
+    * gss_auth - use the gss api for authentication. It has to be True when
+      using Kerberos protocole.
+    """
+    host: str = ""
+    user: str = ""
+    password: str = ""
+    gss_auth: bool = False

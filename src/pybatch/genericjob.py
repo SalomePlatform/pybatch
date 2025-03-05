@@ -1,7 +1,6 @@
-from typing import Protocol
+import typing
 
-
-class GenericJob(Protocol):
+class GenericJob(typing.Protocol):
     "Job protocol to be implemented."
 
     def submit(self) -> None:

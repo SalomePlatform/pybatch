@@ -13,12 +13,10 @@ import os
 def copy(src: str | Path, dest: str | Path) -> None:
     """Recursively copy files and directories."""
     if os.path.isfile(src):
-        print(f"Copy file {src} to {dest}")
         shutil.copy(src, dest)
     elif os.path.isdir(src):
         src_basename = os.path.basename(src)
         dest_dir = Path(dest) / src_basename
-        print(f"Copy dir {src} to {dest_dir}")
         shutil.copytree(src, dest_dir, dirs_exist_ok=True)
     else:
         raise PybatchException(
