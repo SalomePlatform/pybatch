@@ -1,3 +1,4 @@
+from __future__ import annotations
 from importlib.metadata import entry_points
 from .genericjob import GenericJob
 from .generic_protocol import GenericProtocol

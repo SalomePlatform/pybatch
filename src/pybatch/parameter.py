@@ -64,6 +64,6 @@ class ConnexionParameters:
       using Kerberos protocole.
     """
     host: str = ""
-    user: str = ""
-    password: str = ""
+    user: str | None = None
+    password: str | None = None
     gss_auth: bool = False

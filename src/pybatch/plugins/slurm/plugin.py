@@ -13,5 +13,4 @@ class Plugin:
                    param: LaunchParameters,
                    connection_protocol: GenericProtocol
                    ) -> GenericJob:
-        # TODO
         return Job(param, connection_protocol)

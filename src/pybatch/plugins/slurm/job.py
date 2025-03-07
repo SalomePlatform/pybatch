@@ -52,7 +52,7 @@ class Job(GenericJob):
             try:
                 # create remote workdir
                 # workdir is always a linux path
-                logdir = self.job_params + "/logs"
+                logdir = self.job_params.work_directory + "/logs"
                 command = ["mkdir", "-p", logdir]
                 protocol.run(command)
 
@@ -151,7 +151,7 @@ class Job(GenericJob):
             batch += f"#SBATCH --job-name={self.job_params.name}\n"
         if self.job_params.ntasks > 0 :
             batch += f"#SBATCH --ntasks={self.job_params.ntasks}\n"
-        if self.job_params.nnodes > 0 :
+        if self.job_params.nodes > 0 :
             batch += f"#SBATCH --nodes={self.job_params.nodes}\n"
         if self.job_params.exclusive :
             batch += f"#SBATCH --exclusive\n"
@@ -171,7 +171,7 @@ class Job(GenericJob):
             batch += f"#SBATCH {extra}\n"
         if self.job_params.extra_as_string :
             batch += self.job_params.extra_as_string
-        batch += "\n" + self.job_params.command + "\n"
+        batch += "\n" + " ".join(self.job_params.command) + "\n"
         return batch
 
     # A réfléchir, mais il vaut peut-être mieux utiliser la sérialisation
