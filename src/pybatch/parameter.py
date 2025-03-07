@@ -10,11 +10,11 @@ class LaunchParameters:
     List of parameters :
 
       * command - full command to run with arguments as a list.
-      * work_directory - remote work directory
+      * work_directory - remote work directory.
       * host - remote host where the job will be launched
       * user - user name if needed.
       * name - name of the job
-      * nnodes - number of required nodes, 0 for undefined.
+      * nodes - number of required nodes, 0 for undefined.
       * ntasks - number of required tasks, 0 for undefined
       * exclusive - activate exclusive mode.
       * wall_time - maximum time of the job.
@@ -35,11 +35,9 @@ class LaunchParameters:
     """
 
     command: list[str]
-    work_directory: str | Path
-    host: str = ""
-    user: str = ""
+    work_directory: str
     name: str = ""
-    nnodes: int = 0
+    nodes: int = 0
     ntasks: int = 0
     exclusive: bool = False
     wall_time: str = ""

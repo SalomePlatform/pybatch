@@ -1,5 +1,6 @@
 # type: ignore
-from pybatch import GenericJob, LaunchParameters
+from __future__ import annotations
+from pybatch import GenericJob, LaunchParameters, GenericProtocol
 from .job import Job
 
 
@@ -8,6 +9,9 @@ class Plugin:
     def description(self) -> str:
         return """Job submission using slurm batch manager."""
 
-    def create_job(self, param: LaunchParameters) -> GenericJob:
+    def create_job(self,
+                   param: LaunchParameters,
+                   connection_protocol: GenericProtocol
+                   ) -> GenericJob:
         # TODO
-        return Job()
+        return Job(param, connection_protocol)

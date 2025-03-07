@@ -1,9 +1,13 @@
 from importlib.metadata import entry_points
 from .genericjob import GenericJob
+from .generic_protocol import GenericProtocol
 from .parameter import LaunchParameters
 
 
-def create_job(plugin_name: str, params: LaunchParameters) -> GenericJob:
+def create_job(plugin_name: str,
+               params: LaunchParameters,
+               connection_protocol: GenericProtocol | None = None
+               ) -> GenericJob:
     """Create the job with the chosen plugin.
 
     :param plugin_name: name of the plugin to use for the job creation.
@@ -14,7 +18,7 @@ def create_job(plugin_name: str, params: LaunchParameters) -> GenericJob:
     for entry_point in entry_points()["pybatch.plugins"]:
         if entry_point.name == plugin_name:
             plugin = entry_point.load()()
-            job: GenericJob = plugin.create_job(params)
+            job: GenericJob = plugin.create_job(params, connection_protocol)
             return job
     raise Exception(f"Plugin {plugin_name} not found.")
 

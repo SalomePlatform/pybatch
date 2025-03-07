@@ -35,8 +35,6 @@ class Job(GenericJob):
         # TODO We could also use ntasks and mem_per_node to set
         # limits using resource module.
 
-    " Job protocol to be implemented."
-
     def submit(self) -> None:
         """Submit the job to the batch manager and return.
 

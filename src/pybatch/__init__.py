@@ -1,11 +1,13 @@
 __all__ = [
     "GenericJob",
+    "GenericProtocol",
     "LaunchParameters",
     "create_job",
     "PybatchException",
 ]
 from .genericjob import GenericJob
-from .parameter import LaunchParameters
+from .generic_protocol import GenericProtocol
+from .parameter import LaunchParameters, ConnexionParameters
 from .jobmanager import create_job
 
 # WARNING `python_requires = >= 3.8`

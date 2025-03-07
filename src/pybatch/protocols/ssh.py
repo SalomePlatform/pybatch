@@ -5,7 +5,7 @@ class SshProtocol():
     def __init__(self, params:ConnexionParameters):
         self._host = params.host
         self._user = params.user
-        self._password = params.password
+        self._password = params.password #TODO not supported yet
         self._gss_auth = params.gss_auth
 
     def __enter__(self):
@@ -37,10 +37,18 @@ class SshProtocol():
         remote_id += self._host + ":"
         for entry in remote_entries:
             full_command = command + [remote_id + '"' + entry + '"', local_path]
-            proc = subprocess.run(full_command,
-                                  capture_output=True,
-                                  text=True,
-                                  check=True)
+            subprocess.run(full_command, capture_output=True, text=True,
+                           check=True)
+
+    def create(self, remote_path, content):
+        full_command = ["ssh", "-T", self._host]
+        if self._user:
+            full_command += ["-l", self._user]
+        if self._gss_auth:
+            full_command.append("-K")
+        full_command.append(f"cat > '{remote_path}'")
+        subprocess.run(full_command, input=content,
+                       capture_output=True, text=True, check=True)
 
 
     def run(self, command):
@@ -50,5 +58,6 @@ class SshProtocol():
         if self._gss_auth:
             full_command.append("-K")
         full_command += command
-        proc = subprocess.run(full_command, capture_output=True, text=True)
-        return proc.returncode, proc.stdout, proc.stderr
+        proc = subprocess.run(full_command,
+                              capture_output=True, text=True, check=True)
+        return proc.stdout

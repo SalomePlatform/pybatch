@@ -7,6 +7,7 @@ import subprocess
 import os
 
 from ..parameter import ConnexionParameters
+from .. import PybatchException
 
 def copy(src: str | Path, dest: str | Path) -> None:
     """Recursively copy files and directories."""
@@ -17,12 +18,13 @@ def copy(src: str | Path, dest: str | Path) -> None:
         dest_dir = Path(dest) / src_basename
         shutil.copytree(src, dest_dir, dirs_exist_ok=True)
     else:
-        raise Exception(
-            f"Path {src} is neither a file, nor a directory."
+        raise PybatchException(
+            f"Copy error. Path {src} is neither a file, nor a directory."
         )
 
 class LocalProtocol():
-    def __init__(self, host, user=None, password=None, gss_auth=False):
+    "Protocol for localhost."
+    def __init__(self, host=None, user=None, password=None, gss_auth=False):
         pass
     def __enter__(self):
         return self
@@ -40,6 +42,17 @@ class LocalProtocol():
             copy(entry, local_path)
 
 
+    def create(self, remote_path, content):
+        Path(remote_path).write_text(content)
+
+
     def run(self, command):
         proc = subprocess.run(command, capture_output=True, text=True)
-        return proc.returncode, proc.stdout, proc.stderr
+        ret_code = proc.returncode
+        if ret_code != 0 :
+            message = f"""Error {ret_code}.
+  command: {command}.
+  stderr: {proc.stderr}
+"""
+            raise PybatchException(message)
+        return proc.stdout
