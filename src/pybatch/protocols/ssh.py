@@ -16,6 +16,16 @@ class SshProtocol():
         pass
 
 
+    def open(self):
+        "Open session."
+        pass
+
+
+    def close(self):
+        "Close session."
+        pass
+
+
     def upload(self, local_entries, remote_path):
         full_command = ["scp", "-r"] + local_entries
         destination = ""
@@ -61,3 +71,7 @@ class SshProtocol():
         proc = subprocess.run(full_command,
                               capture_output=True, text=True, check=True)
         return proc.stdout
+
+
+def open(params:ConnexionParameters) -> SshProtocol:
+    return SshProtocol(params)

@@ -53,8 +53,11 @@ class Job(GenericJob):
     def wait(self) -> None:
         "Wait until the end of the job."
         if self.pid > 0:
-            pu = psutil.Process(self.pid)
-            pu.wait()
+            try:
+                pu = psutil.Process(self.pid)
+                pu.wait()
+            except psutil.NoSuchProcess:
+                pass
 
     def state(self) -> str:
         """Possible states : 'CREATED', 'IN_PROCESS', 'QUEUED', 'RUNNING',
@@ -65,7 +68,15 @@ class Job(GenericJob):
         if psutil.pid_exists(self.pid):
             return "RUNNING"
         else:
-            return "FINISHED"
+            exit_log = Path(self.work_directory) / "logs" / "exit_code.log"
+            if exit_log.is_file():
+                exit_value = exit_log.read_text()
+                if exit_value == "0":
+                    return "FINISHED"
+                else:
+                    return "FAILED"
+            else:
+                return "FAILED"
 
     def cancel(self) -> None:
         "Stop the job."

@@ -7,3 +7,6 @@ build
 
 # Python virtual env
 .venv/
+
+# tools
+.vscode

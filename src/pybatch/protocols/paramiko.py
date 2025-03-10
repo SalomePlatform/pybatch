@@ -3,6 +3,7 @@ import scp
 from ..parameter import ConnexionParameters
 from .. import PybatchException
 
+
 class ParamikoProtocol():
     def __init__(self, params:ConnexionParameters):
         client = paramiko.client.SSHClient()
@@ -11,14 +12,26 @@ class ParamikoProtocol():
         self.client = client
         self.params = params
 
+
     def __enter__(self):
+        self.open()
+        return self
+
+
+    def __exit__(self, type, value, traceback):
+        self.close()
+
+
+    def open(self):
         self.client.connect(self.params.host, username=self.params.user,
                             password=self.params.password,
                             gss_auth=self.params.gss_auth)
-        return self
 
-    def __exit__(self, type, value, traceback):
+
+    def close(self):
+        "Close session."
         self.client.close()
+
 
     def upload(self, local_entries, remote_path):
         with scp.SCPClient(self.client.get_transport()) as client:
@@ -59,3 +72,7 @@ class ParamikoProtocol():
 """
             raise PybatchException(message)
         return str_std
+
+
+def open(params:ConnexionParameters) -> ParamikoProtocol:
+    return ParamikoProtocol(params)

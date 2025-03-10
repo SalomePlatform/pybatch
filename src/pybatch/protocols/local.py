@@ -32,6 +32,16 @@ class LocalProtocol():
         pass
 
 
+    def open(self):
+        "Open session."
+        pass
+
+
+    def close(self):
+        "Close session."
+        pass
+
+
     def upload(self, local_entries, remote_path):
         for entry in local_entries:
             copy(entry, remote_path)
@@ -56,3 +66,7 @@ class LocalProtocol():
 """
             raise PybatchException(message)
         return proc.stdout
+
+
+def open() -> LocalProtocol:
+    return LocalProtocol()

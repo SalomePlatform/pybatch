@@ -32,7 +32,7 @@ def simplified_state(name:str) -> str:
     for state in failed_states:
         if name.startswith(state):
             return "FAILED"
-    return ""
+    return "UNKNOWN"
 
 class Job(GenericJob):
     def __init__(self, param: LaunchParameters, protocol: GenericProtocol):
@@ -116,8 +116,6 @@ class Job(GenericJob):
             raise PybatchException("Failed to get the state of the job.") from e
         if state:
             return state
-        else:
-            return "Unknown"
 
 
     def cancel(self) -> None:
@@ -172,6 +170,10 @@ class Job(GenericJob):
         if self.job_params.extra_as_string :
             batch += self.job_params.extra_as_string
         batch += "\n" + " ".join(self.job_params.command) + "\n"
+        batch += """EXIT_CODE=$?
+echo $EXIT_CODE > logs/exit_code.log
+exit $EXIT_CODE
+"""
         return batch
 
     # A réfléchir, mais il vaut peut-être mieux utiliser la sérialisation

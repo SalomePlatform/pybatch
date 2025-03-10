@@ -9,6 +9,16 @@ class GenericProtocol(typing.Protocol):
         ...
 
 
+    def open(self):
+        "Open session."
+        ...
+
+
+    def close(self):
+        "Close session."
+        ...
+
+
     def upload(self, local_entries, remote_path):
         "Upload files and directories to the server."
         ...

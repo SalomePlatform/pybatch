@@ -10,7 +10,7 @@ class LaunchParameters:
     List of parameters :
 
       * command - full command to run with arguments as a list.
-      * work_directory - remote work directory.
+      * work_directory - remote work directory, with path separator at the end.
       * host - remote host where the job will be launched
       * user - user name if needed.
       * name - name of the job
