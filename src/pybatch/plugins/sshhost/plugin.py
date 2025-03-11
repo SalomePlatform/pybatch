@@ -1,5 +1,5 @@
 # type: ignore
-from pybatch import GenericJob, LaunchParameters, GenericProtocol
+from ... import GenericJob, LaunchParameters, GenericProtocol
 from .job import Job
 
 
@@ -13,4 +13,4 @@ class Plugin:
                    connection_protocol: GenericProtocol
                    ) -> GenericJob:
         # TODO
-        return Job()
+        return Job(param, connection_protocol)

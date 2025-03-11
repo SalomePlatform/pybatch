@@ -19,8 +19,12 @@ def handler(
     proc.terminate()
 
 def run(command:list[str], wall_time: int | None) -> None:
-    if wall_time:
-        pass
+    """Run a command and wait until the end.
+
+    The command is killed after wall_time seconds.
+    The current directory has been already set to the work directory and the
+    command is launched without changing the directory.
+    """
     log_path = Path("logs")
     stdout_log = log_path / "output.log"
     stderr_log = log_path / "error.log"
@@ -43,6 +47,12 @@ def run(command:list[str], wall_time: int | None) -> None:
 
 
 def submit(workdir:str, command:list[str], wall_time: int | None) -> None:
+    """Launch a command and return immediatly.
+
+    The command is launched in workdir.
+    The pid of the created process is printed on stdout.
+    """
+    # workdir = os.path.dirname(__file__)
     log_path = Path(workdir) / "logs"
     log_path.mkdir(parents=True, exist_ok=True)
     stdout_log = log_path / "manager_output.log"
@@ -60,6 +70,7 @@ def submit(workdir:str, command:list[str], wall_time: int | None) -> None:
     print(proc.pid)
 
 def wait(proc_id:int) -> None:
+    "Wait for the process to finish."
     try:
         pu = psutil.Process(proc_id)
         pu.wait()
@@ -67,11 +78,17 @@ def wait(proc_id:int) -> None:
         pass
 
 
-def state(proc_id:int) -> None:
+def state(proc_id:int, workdir) -> None:
+    """Print the state of the process.
+
+    The work directory of the job is supposed to be the same as the directory
+    of this script.
+    """
     if psutil.pid_exists(proc_id):
         print("RUNNING")
     else:
-        exit_log = Path(".") / "logs" / "exit_code.log"
+        # workdir = os.path.dirname(__file__)
+        exit_log = Path(workdir) / "logs" / "exit_code.log"
         if exit_log.is_file():
             exit_value = exit_log.read_text()
             if exit_value == "0":
@@ -82,6 +99,7 @@ def state(proc_id:int) -> None:
             print("FAILED")
 
 def cancel(proc_id:int) -> None:
+    "Kill the process."
     try:
         pu = psutil.Process(proc_id)
         pu.terminate()
@@ -112,6 +130,7 @@ def main() -> None:
 
     parser_state = subparsers.add_parser("state", help="Print the state of a job.")
     parser_state.add_argument("proc", type=int, help="Process id.")
+    parser_state.add_argument("work_dir", help="Work directory.")
 
     parser_cancel = subparsers.add_parser("cancel", help="Cancel a job.")
     parser_cancel.add_argument("proc", type=int, help="Process id.")
@@ -124,7 +143,7 @@ def main() -> None:
     elif args.mode == "wait":
         wait(args.proc)
     elif args.mode == "state":
-        state(args.proc)
+        state(args.proc, args.work_dir)
     elif args.mode == "cancel":
         cancel(args.proc)
 
