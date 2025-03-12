@@ -4,7 +4,7 @@ import os
 import shutil
 
 
-def test_python_script():
+def test_python_script(job_plugin):
     """Launch a python script which ends without errors.
 
     Check files from 'logs' folder.
@@ -17,7 +17,7 @@ def test_python_script():
     params = pybatch.LaunchParameters(
         ["python3", "hello.py", "world"], workdir, input_files=[script]
     )
-    job = pybatch.create_job("local", params)
+    job = pybatch.create_job(job_plugin, params)
     job.submit()
     job.wait()
 
@@ -30,7 +30,7 @@ def test_python_script():
     shutil.rmtree(workdir)
 
 
-def test_error_script():
+def test_error_script(job_plugin):
     """Launch a python script which ends in error.
 
     Check files from 'logs' folder.
@@ -43,7 +43,7 @@ def test_error_script():
     params = pybatch.LaunchParameters(
         ["python3", "error.py"], workdir, input_files=[script]
     )
-    job = pybatch.create_job("local", params)
+    job = pybatch.create_job(job_plugin, params)
     job.submit()
     job.wait()
 
@@ -56,7 +56,7 @@ def test_error_script():
     shutil.rmtree(workdir)
 
 
-def test_state():
+def test_state(job_plugin):
     """Test the state of a job."""
     import pybatch
 
@@ -66,7 +66,7 @@ def test_state():
     params = pybatch.LaunchParameters(
         ["python3", "sleep.py", "1"], workdir, input_files=[script]
     )
-    job = pybatch.create_job("local", params)
+    job = pybatch.create_job(job_plugin, params)
     assert job.state() == "CREATED"
     job.submit()
     assert job.state() == "RUNNING"
@@ -78,7 +78,7 @@ def test_state():
     shutil.rmtree(workdir)
 
 
-def test_cancel():
+def test_cancel(job_plugin):
     """Cancel a running job."""
     import pybatch
     import time
@@ -89,7 +89,7 @@ def test_cancel():
     params = pybatch.LaunchParameters(
         ["python3", "sleep.py", "2"], workdir, input_files=[script]
     )
-    job = pybatch.create_job("local", params)
+    job = pybatch.create_job(job_plugin, params)
     assert job.state() == "CREATED"
     job.submit()
     time.sleep(1)
@@ -103,7 +103,7 @@ def test_cancel():
     shutil.rmtree(workdir)
 
 
-def test_serialization():
+def test_serialization(job_plugin):
     """Serialization / deserialization of a submited job in the same script."""
     import pybatch
     import pickle
@@ -114,7 +114,7 @@ def test_serialization():
     params = pybatch.LaunchParameters(
         ["python3", "sleep.py", "1"], workdir, input_files=[script]
     )
-    job = pybatch.create_job("local", params)
+    job = pybatch.create_job(job_plugin, params)
     job.submit()
     pick_job = pickle.dumps(job)
     new_job = pickle.loads(pick_job)
@@ -124,7 +124,7 @@ def test_serialization():
     shutil.rmtree(workdir)
 
 
-def test_wall_time():
+def test_wall_time(job_plugin):
     """Job with wall time."""
     import pybatch
 
@@ -137,7 +137,7 @@ def test_wall_time():
         input_files=[script],
         wall_time="1",
     )
-    job = pybatch.create_job("local", params)
+    job = pybatch.create_job(job_plugin, params)
     job.submit()
     job.wait()
     assert not (Path(workdir) / "wakeup.txt").exists()
@@ -147,7 +147,7 @@ def test_wall_time():
     shutil.rmtree(workdir)
 
 
-def test_files_and_directories():
+def test_files_and_directories(job_plugin):
     """Job that uses and produces files and directories."""
     import pybatch
 
@@ -162,16 +162,16 @@ def test_files_and_directories():
         workdir,
         input_files=[script, file_input, dir_input],
     )
-    job = pybatch.create_job("local", params)
+    job = pybatch.create_job(job_plugin, params)
     job.submit()
     job.wait()
     error_file = Path(workdir) / "logs" / "error.log"
     assert not error_file.read_text()  # empty file expected
     exit_code = Path(workdir) / "logs" / "exit_code.log"
     assert exit_code.read_text() == "0"
-    job.get("output.txt", resultdir)
+    job.get(["output.txt"], resultdir)
     assert (Path(resultdir) / "output.txt").read_text() == "51"
-    job.get("data", resultdir)
+    job.get(["data"], resultdir)
     assert (Path(resultdir) / "data" / "output.txt").read_text() == "69"
     shutil.rmtree(workdir)
     shutil.rmtree(resultdir)

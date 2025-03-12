@@ -24,10 +24,10 @@ class GenericJob(typing.Protocol):
         "Stop the job."
         ...
 
-    def get(self, remote_path: str, local_path: str) -> None:
+    def get(self, remote_path: list[str], local_path: str) -> None:
         """Copy a file from the remote work directory.
 
-        :param remote_path: path relative to work directory on the remote host.
+        :param remote_paths: paths relative to work directory on remote host.
         :param local_path: destination of the copy on local file system.
         """
         ...

@@ -50,6 +50,7 @@ class LaunchParameters:
     extra_as_list: list[str] = field(default_factory=list)
     preprocess: str = ""
     input_files: list[str | Path] = field(default_factory=list)
+    is_posix: bool = True
 
 @dataclass
 class ConnexionParameters:

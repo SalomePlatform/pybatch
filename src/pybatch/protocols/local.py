@@ -6,7 +6,6 @@ import shutil
 import subprocess
 import os
 
-from ..parameter import ConnexionParameters
 from .. import PybatchException
 
 def copy(src: str | Path, dest: str | Path) -> None:

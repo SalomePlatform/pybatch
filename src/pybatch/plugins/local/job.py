@@ -83,18 +83,21 @@ class Job(GenericJob):
         pu = psutil.Process(self.pid)
         pu.terminate()
 
-    def get(self, remote_path: str | Path, local_path: str | Path) -> None:
+    def get(self,
+            remote_paths: list[str | Path],
+            local_path: str | Path) -> None:
         """Copy a file or directory from the remote work directory.
 
         :param remote_path: path relative to work directory on the remote host.
         :param local_path: destination of the copy on local file system.
         """
-        if os.path.isabs(remote_path):
-            abs_remote_path = remote_path
-        else:
-            abs_remote_path = Path(self.work_directory) / remote_path
-            abs_remote_path = os.path.realpath(abs_remote_path)
-        copy(abs_remote_path, local_path)
+        for path in remote_paths:
+            if os.path.isabs(path):
+                abs_remote_path = path
+            else:
+                abs_remote_path = Path(self.work_directory) / path
+                abs_remote_path = os.path.realpath(abs_remote_path)
+            copy(abs_remote_path, local_path)
 
     def config(self) -> dict[str, typing.Any]:
         cfg: dict[str, typing.Any] = {

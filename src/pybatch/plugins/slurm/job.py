@@ -1,12 +1,13 @@
 from __future__ import annotations
 import typing
-from pybatch import GenericJob, GenericProtocol, LaunchParameters
+from pathlib import Path
 
+from pybatch import GenericJob, GenericProtocol, LaunchParameters
 from pybatch import PybatchException
 from pybatch.protocols.local import LocalProtocol
 
-from pathlib import Path
-import os
+from pybatch.tools import path_join, is_absolute
+
 
 def simplified_state(name:str) -> str:
     finished_states = ["COMPLETED"]
@@ -52,14 +53,16 @@ class Job(GenericJob):
             try:
                 # create remote workdir
                 # workdir is always a linux path
-                logdir = self.job_params.work_directory + "/logs"
+                logdir = path_join(self.job_params.work_directory, "logs",
+                                   is_posix=True)
                 command = ["mkdir", "-p", logdir]
                 protocol.run(command)
 
-                batch_path = self.job_params.work_directory + "/batch.cmd"
+                batch_path = path_join(self.job_params.work_directory,
+                                       "batch.cmd", is_posix=True)
                 protocol.create(batch_path, self.batch_file())
                 protocol.upload(self.job_params.input_files,
-                                 self.job_params.work_directory)
+                                self.job_params.work_directory)
                 output = protocol.run(["sbatch", "--parsable",
                                        "--chdir", self.job_params.work_directory,
                                        batch_path])
@@ -130,14 +133,23 @@ class Job(GenericJob):
             raise PybatchException("Failed to cancel the job.") from e
 
 
-    def get(self, remote_path: str | Path, local_path: str | Path) -> None:
+    def get(self, remote_paths: list[str], local_path: str | Path) -> None:
         """Copy a file or directory from the remote work directory.
 
-        :param remote_path: path relative to work directory on the remote host.
+        :param remote_paths: paths relative to work directory on remote host.
         :param local_path: destination of the copy on local file system.
         """
         with self.protocol as protocol :
-            protocol.download(remote_path, local_path)
+            checked_paths = []
+            for path in remote_paths:
+                if is_absolute(path, self.job_params.is_posix):
+                    checked_paths.append(path)
+                else:
+                    p = path_join(self.job_params.work_directory,
+                                  path,
+                                  is_posix=self.job_params.is_posix)
+                    checked_paths.append(p)
+            protocol.download(checked_paths, local_path)
 
     def batch_file(self) -> str:
         "Get the content of the batch file submited to the batch manager."
