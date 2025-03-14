@@ -23,7 +23,7 @@ def copy(src: str | Path, dest: str | Path) -> None:
 
 class LocalProtocol():
     "Protocol for localhost."
-    def __init__(self, host=None, user=None, password=None, gss_auth=False):
+    def __init__(self, params=None):
         pass
     def __enter__(self):
         return self

@@ -28,7 +28,7 @@ pybatch_run = "pybatch.plugins.local.pybatch_run:main" # local batch manager
 [project.entry-points."pybatch.plugins"]
 local = "pybatch.plugins.local.plugin:Plugin"
 slurm = "pybatch.plugins.slurm.plugin:Plugin"
-sshhost = "pybatch.plugins.sshhost.plugin:Plugin"
+nobatch = "pybatch.plugins.nobatch.plugin:Plugin"
 
 [project.optional-dependencies]
 dev = [
@@ -49,6 +49,7 @@ test = [
     "pytest-timeout", # pytest --timeout=300
     "pytest-html",    # html reports
     "pytest-sugar",   # progress bar & better look output
+    "tomli;python_version<'3.11'"
 ]
 
 [tool.ruff]
