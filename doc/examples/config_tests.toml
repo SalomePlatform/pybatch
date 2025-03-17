@@ -1,0 +1,12 @@
+[remote]
+host = "cronos"
+plugins = ["nobatch", "slurm"]
+protocols = ["ssh", "paramiko"]
+work_dir = "/scratch/users/I35256/workingdir"
+wckey = "P120K:SALOME"
+is_posix = true # use false for a remote Windows server.
+
+[local]
+# plugin "slurm" to test on the frontal of a cluster.
+plugins = ["local", "slurm"]
+wckey = "P120K:SALOME"
