@@ -18,7 +18,9 @@ classifiers = [
 # python 3.9 needed for 'list[str]' syntaxe.
 requires-python = ">=3.9"
 dependencies = [
-    "psutil"
+    "psutil",
+    "scp",
+    "paramiko[gssapi]"
 ]
 version = "0.0"
 

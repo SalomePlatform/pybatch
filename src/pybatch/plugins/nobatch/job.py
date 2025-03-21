@@ -22,6 +22,13 @@ class Job(GenericJob):
     def submit(self) -> None:
         with self.protocol as protocol :
             try:
+                # TODO deal with no posix
+                if self.job_params.is_posix:
+                    logdir = path_join(self.job_params.work_directory, "logs",
+                                    is_posix=True)
+                    command = ["mkdir", "-p", logdir]
+                    protocol.run(command)
+
                 file_dir = Path(os.path.dirname(__file__))
                 manager_script = file_dir / "pybatch_manager.py"
                 input_files = self.job_params.input_files + [manager_script]

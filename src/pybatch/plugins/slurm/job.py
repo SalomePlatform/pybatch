@@ -1,6 +1,7 @@
 from __future__ import annotations
 import typing
 from pathlib import Path
+import time
 
 from pybatch import GenericJob, GenericProtocol, LaunchParameters
 from pybatch import PybatchException
@@ -33,7 +34,7 @@ def simplified_state(name:str) -> str:
     for state in failed_states:
         if name.startswith(state):
             return "FAILED"
-    return "UNKNOWN"
+    return ""
 
 class Job(GenericJob):
     def __init__(self, param: LaunchParameters, protocol: GenericProtocol):
@@ -66,7 +67,7 @@ class Job(GenericJob):
                 output = protocol.run(["sbatch", "--parsable",
                                        "--chdir", self.job_params.work_directory,
                                        batch_path])
-                self.jobid = output.split(";")[0]
+                self.jobid = output.split(";")[0].strip()
             except Exception as e:
                 message = "Failed to submit job."
                 raise PybatchException(message) from e
@@ -77,22 +78,25 @@ class Job(GenericJob):
         if not self.jobid :
             return
         state = self.state()
-        if state == "FINISHED" or state == "FAILED":
-            return
-        # our job is not over.
-        # we create another job to wait for the end of our job.
-        with self.protocol as protocol :
-            try:
-                command = ["sbatch", f"--dependency=afterany:{self.jobid}",
-                           "--wait", "--kill-on-invalid-dep=yes",
-                           "--ntasks=1", "--ntasks-per-core=1", "--time=1",
-                           "--wrap='exit 0'"]
-                if self.job_params.wckey :
-                    command.append(f"--wckey={self.job_params.wckey}")
-                protocol.run(command)
-            except Exception as e:
-                message = "Failed to wait job."
-                raise PybatchException(message) from e
+        while state != "FINISHED" and state != "FAILED":
+            time.sleep(1)
+            state = self.state()
+        # if state == "FINISHED" or state == "FAILED":
+        #     return
+        # # our job is not over.
+        # # we create another job to wait for the end of our job.
+        # with self.protocol as protocol :
+        #     try:
+        #         command = ["sbatch", f"--dependency=afterany:{self.jobid}",
+        #                    "--wait", "--kill-on-invalid-dep=yes",
+        #                 #    "--ntasks=1", "--ntasks-per-core=1", "--time=1",
+        #                    "--wrap='exit 0'"]
+        #         if self.job_params.wckey :
+        #             command.append(f"--wckey={self.job_params.wckey}")
+        #         protocol.run(command)
+        #     except Exception as e:
+        #         message = "Failed to wait job."
+        #         raise PybatchException(message) from e
 
     def state(self) -> str:
         """Possible states : 'CREATED', 'QUEUED', 'RUNNING',
@@ -106,6 +110,7 @@ class Job(GenericJob):
                 command = ["squeue", "-h", "-o", "%T", "-j", self.jobid]
                 output = protocol.run(command)
                 state = simplified_state(output)
+                squeue_state = state
                 if state:
                     return state
 
@@ -115,10 +120,13 @@ class Job(GenericJob):
                            "-j", self.jobid]
                 output = protocol.run(command)
                 state = simplified_state(output)
+                sacct_state = state
         except Exception as e:
             raise PybatchException("Failed to get the state of the job.") from e
         if state:
             return state
+        else:
+            raise PybatchException(f"Unknown state. squestae: {squeue_state}, sacct_state:{sacct_state}")
 
 
     def cancel(self) -> None:

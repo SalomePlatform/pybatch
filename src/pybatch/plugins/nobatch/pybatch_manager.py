@@ -1,30 +1,39 @@
 #! /usr/bin/env python3
 """
 This script manages the execution of a command.
+It is meant to be run on the remote server side.
 """
-from __future__ import annotations
-from typing import Optional
-from types import FrameType
+# No typing for better compatibility with older python versions.
+# (edf gaia - python 3.5)
+# 
+# from __future__ import annotations
+# from typing import Optional
+# from types import FrameType
 
 import argparse
 import subprocess
 import signal
 import functools
-import psutil
+# import psutil
+import os
+import errno
 from pathlib import Path
 
-def handler(
-    proc: subprocess.Popen[bytes], signum: int, frame: Optional[FrameType]
-) -> None:
+# def handler(
+#     proc: subprocess.Popen[bytes], signum: int, frame: Optional[FrameType]
+# ) -> None:
+def handler(proc, signum, frame):
     proc.terminate()
 
-def run(command:list[str], wall_time: int | None) -> None:
+# def run(command:list[str], wall_time: int | None) -> None:
+def run(command, wall_time):
     """Run a command and wait until the end.
 
     The command is killed after wall_time seconds.
     The current directory has been already set to the work directory and the
     command is launched without changing the directory.
     """
+    # TODO deal with SIGHUP
     log_path = Path("logs")
     stdout_log = log_path / "output.log"
     stderr_log = log_path / "error.log"
@@ -46,7 +55,8 @@ def run(command:list[str], wall_time: int | None) -> None:
         exit_file.write(str(exit_code))
 
 
-def submit(workdir:str, command:list[str], wall_time: int | None) -> None:
+# def submit(workdir:str, command:list[str], wall_time: int | None) -> None:
+def submit(workdir, command, wall_time):
     """Launch a command and return immediatly.
 
     The command is launched in workdir.
@@ -65,26 +75,47 @@ def submit(workdir:str, command:list[str], wall_time: int | None) -> None:
     if wall_time:
         run_command += ["--wall_time", str(wall_time)]
     run_command += command
+    # TODO FIX defunct
+    # TODO check start_new_session on windows
     proc = subprocess.Popen(run_command, stdout=stdout_file, stderr=stderr_file,
-                            cwd=workdir)
+                            cwd=workdir, start_new_session=True)
     print(proc.pid)
 
-def wait(proc_id:int) -> None:
+# def wait(proc_id:int) -> None:
+def wait(proc_id):
     "Wait for the process to finish."
-    try:
-        pu = psutil.Process(proc_id)
-        pu.wait()
-    except psutil.NoSuchProcess:
-        pass
+    # try:
+    #     import psutil
+
+    #     pu = psutil.Process(proc_id)
+    #     pu.wait()
+    # except psutil.NoSuchProcess:
+    #     pass
+    import time
+    proc_exists = True
+    while proc_exists:
+        try:
+            os.kill(proc_id, 0)
+        except ProcessLookupError:
+            proc_exists = False
+        else:
+            time.sleep(0.1)
 
 
-def state(proc_id:int, workdir) -> None:
+# def state(proc_id:int, workdir) -> None:
+def state(proc_id, workdir):
     """Print the state of the process.
 
     The work directory of the job is supposed to be the same as the directory
     of this script.
     """
-    if psutil.pid_exists(proc_id):
+    proc_exists = True
+    try:
+        os.kill(proc_id, 0)
+    except ProcessLookupError:
+        proc_exists = False
+    # if psutil.pid_exists(proc_id):
+    if proc_exists:
         print("RUNNING")
     else:
         # workdir = os.path.dirname(__file__)
@@ -98,15 +129,22 @@ def state(proc_id:int, workdir) -> None:
         else:
             print("FAILED")
 
-def cancel(proc_id:int) -> None:
+# def cancel(proc_id:int) -> None:
+def cancel(proc_id):
     "Kill the process."
     try:
-        pu = psutil.Process(proc_id)
-        pu.terminate()
-    except psutil.NoSuchProcess:
-        pass
+        os.kill(proc_id, signal.SIGTERM)
+    except:
+        pass # TODO
+    # try:
+    #     import psutil
+    #     pu = psutil.Process(proc_id)
+    #     pu.terminate()
+    # except psutil.NoSuchProcess:
+    #     pass
 
-def main() -> None:
+# def main() -> None:
+def main(args_list = None):
     parser = argparse.ArgumentParser(
         description="Job manager for pybatch.")
     subparsers = parser.add_subparsers(dest="mode", required=True,
@@ -135,7 +173,7 @@ def main() -> None:
     parser_cancel = subparsers.add_parser("cancel", help="Cancel a job.")
     parser_cancel.add_argument("proc", type=int, help="Process id.")
 
-    args = parser.parse_args()
+    args = parser.parse_args(args_list)
     if args.mode == "run":
         run(args.command, args.wall_time)
     elif args.mode == "submit":

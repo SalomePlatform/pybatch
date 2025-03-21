@@ -1,8 +1,9 @@
 [remote]
-host = "cronos"
+host = "gaia"
 plugins = ["nobatch", "slurm"]
+# plugins = ["slurm"]
 protocols = ["ssh", "paramiko"]
-work_dir = "/scratch/users/I35256/workingdi/pybatch"
+work_dir = "/scratch/I35256/workingdir/pybatch"
 wckey = "P120K:SALOME"
 is_posix = true # use false for a remote Windows server.
 gss_auth = true # use kerberos authentication
