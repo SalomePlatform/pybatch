@@ -8,4 +8,4 @@ libkrb5-dev
 
 # Tests
 
-tox -e test -- --user-config-file doc/examples/config_tests.toml
+tox -e test -- --user-config-file=doc/examples/config_tests.toml
