@@ -2,47 +2,62 @@
 """
 This script manages the execution of a command.
 It is meant to be run on the remote server side.
+This script should avoid the utilisation of non standard python modules for
+better compatibility, because pybatch is not necessary installed on the remote
+server.
 """
 # No typing for better compatibility with older python versions.
 # (edf gaia - python 3.5)
-# 
-# from __future__ import annotations
-# from typing import Optional
-# from types import FrameType
-
 import argparse
 import subprocess
 import signal
 import functools
-# import psutil
 import os
-import errno
 from pathlib import Path
+import sys
 
-# def handler(
-#     proc: subprocess.Popen[bytes], signum: int, frame: Optional[FrameType]
-# ) -> None:
 def handler(proc, signum, frame):
     proc.terminate()
 
-# def run(command:list[str], wall_time: int | None) -> None:
-def run(command, wall_time):
-    """Run a command and wait until the end.
+def submit(workdir, command, wall_time):
+    """Launch a command and return immediatly.
 
-    The command is killed after wall_time seconds.
-    The current directory has been already set to the work directory and the
-    command is launched without changing the directory.
+    The command is launched in workdir.
+    The pid of the created process is printed on stdout.
     """
-    # TODO deal with SIGHUP
-    log_path = Path("logs")
+    # check access to workdir before fork.
+    log_path = Path(workdir) / "logs"
+    log_path.mkdir(parents=True, exist_ok=True)
     stdout_log = log_path / "output.log"
     stderr_log = log_path / "error.log"
+    manager_log = log_path / "manager.log"
+    stdout_log.touch()
+    stderr_log.touch()
+    manager_log.touch()
+
+    # execute in detached mode
+    pid = os.fork()
+    if pid > 0:
+        # father side
+        print(pid)
+        return
+    # child side
+    os.setsid()
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
+
+    log = open(str(manager_log), "w") # python 3.5
+    # std redirection
+    os.dup2(log.fileno(), sys.stdout.fileno())
+    os.dup2(log.fileno(), sys.stderr.fileno())
+    os.dup2(os.open(os.devnull, os.O_RDWR), sys.stdin.fileno())
+
     # file descriptors are automaticaly closed by default
     # (see close_fds argument of Popen).
-    stdout_file = open(stdout_log, "w")
-    stderr_file = open(stderr_log, "w")
+    stdout_file = open(str(stdout_log), "w") # python 3.5
+    stderr_file = open(str(stderr_log), "w") # python 3.5
     proc = subprocess.Popen(command,
-                            stdout=stdout_file, stderr=stderr_file)
+                            stdout=stdout_file, stderr=stderr_file,
+                            cwd=workdir)
     signal.signal(signal.SIGTERM, functools.partial(handler, proc))
     try:
         exit_code = proc.wait(wall_time)
@@ -54,43 +69,8 @@ def run(command, wall_time):
     with open(exit_log, "w") as exit_file:
         exit_file.write(str(exit_code))
 
-
-# def submit(workdir:str, command:list[str], wall_time: int | None) -> None:
-def submit(workdir, command, wall_time):
-    """Launch a command and return immediatly.
-
-    The command is launched in workdir.
-    The pid of the created process is printed on stdout.
-    """
-    # workdir = os.path.dirname(__file__)
-    log_path = Path(workdir) / "logs"
-    log_path.mkdir(parents=True, exist_ok=True)
-    stdout_log = log_path / "manager_output.log"
-    stderr_log = log_path / "manager_error.log"
-    # file descriptors are automaticaly closed by default
-    # (see close_fds argument of Popen).
-    stdout_file = open(stdout_log, "w")
-    stderr_file = open(stderr_log, "w")
-    run_command = ["python3", "pybatch_manager.py", "run"]
-    if wall_time:
-        run_command += ["--wall_time", str(wall_time)]
-    run_command += command
-    # TODO FIX defunct
-    # TODO check start_new_session on windows
-    proc = subprocess.Popen(run_command, stdout=stdout_file, stderr=stderr_file,
-                            cwd=workdir, start_new_session=True)
-    print(proc.pid)
-
-# def wait(proc_id:int) -> None:
 def wait(proc_id):
     "Wait for the process to finish."
-    # try:
-    #     import psutil
-
-    #     pu = psutil.Process(proc_id)
-    #     pu.wait()
-    # except psutil.NoSuchProcess:
-    #     pass
     import time
     proc_exists = True
     while proc_exists:
@@ -102,7 +82,6 @@ def wait(proc_id):
             time.sleep(0.1)
 
 
-# def state(proc_id:int, workdir) -> None:
 def state(proc_id, workdir):
     """Print the state of the process.
 
@@ -114,11 +93,9 @@ def state(proc_id, workdir):
         os.kill(proc_id, 0)
     except ProcessLookupError:
         proc_exists = False
-    # if psutil.pid_exists(proc_id):
     if proc_exists:
         print("RUNNING")
     else:
-        # workdir = os.path.dirname(__file__)
         exit_log = Path(workdir) / "logs" / "exit_code.log"
         if exit_log.is_file():
             exit_value = exit_log.read_text()
@@ -129,31 +106,18 @@ def state(proc_id, workdir):
         else:
             print("FAILED")
 
-# def cancel(proc_id:int) -> None:
 def cancel(proc_id):
     "Kill the process."
     try:
         os.kill(proc_id, signal.SIGTERM)
     except:
         pass # TODO
-    # try:
-    #     import psutil
-    #     pu = psutil.Process(proc_id)
-    #     pu.terminate()
-    # except psutil.NoSuchProcess:
-    #     pass
 
-# def main() -> None:
 def main(args_list = None):
     parser = argparse.ArgumentParser(
         description="Job manager for pybatch.")
-    subparsers = parser.add_subparsers(dest="mode", required=True,
+    subparsers = parser.add_subparsers(dest="mode", #required=True,#python>=3.7
                                        help="Use mode.")
-    parser_run = subparsers.add_parser("run",
-                                 help="Execute a command and wait for the end.")
-    parser_run.add_argument("--wall_time", type=int, default=None,
-                            help="Maximum execution time in seconds.")
-    parser_run.add_argument("command", nargs='+', help="Command to run.")
 
     parser_submit = subparsers.add_parser("submit",
                                           help="Start a job and print the pid.")
@@ -174,9 +138,7 @@ def main(args_list = None):
     parser_cancel.add_argument("proc", type=int, help="Process id.")
 
     args = parser.parse_args(args_list)
-    if args.mode == "run":
-        run(args.command, args.wall_time)
-    elif args.mode == "submit":
+    if args.mode == "submit":
         submit(args.work_dir, args.command, args.wall_time)
     elif args.mode == "wait":
         wait(args.proc)

@@ -2,12 +2,13 @@
 host = "cronos"
 plugins = ["nobatch", "slurm"]
 protocols = ["ssh", "paramiko"]
-work_dir = "/scratch/users/I35256/workingdi/pybatch"
+work_dir = "/scratch/users/I35256/workingdir/pybatch"
 wckey = "P120K:SALOME"
 is_posix = true # use false for a remote Windows server.
 gss_auth = true # use kerberos authentication
 
 [local]
 # plugin "slurm" to test on the frontal of a cluster.
-plugins = ["local", "slurm"]
-wckey = "P120K:SALOME"
+# plugins = ["nobatch", "slurm"]
+plugins = ["nobatch"]
+# wckey = "P120K:SALOME"

@@ -10,5 +10,6 @@ gss_auth = true # use kerberos authentication
 
 [local]
 # plugin "slurm" to test on the frontal of a cluster.
-plugins = ["local", "slurm"]
-wckey = "P120K:SALOME"
+# plugins = ["nobatch", "slurm"]
+plugins = ["nobatch"]
+# wckey = "P120K:SALOME"
