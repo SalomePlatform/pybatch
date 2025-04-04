@@ -36,36 +36,97 @@ def create_protocol(protocol_name:str, config:dict[str, typing.Any]
         raise Exception(f"Unknown protocol {protocol_name}")
     return protocol
 
-
-def test_python_script(remote_plugin:str,
-                       remote_protocol:str,
-                       remote_args:dict[str, typing.Any]) -> None:
-    assert remote_plugin in ["nobatch", "slurm"]
-    assert remote_protocol in ["ssh", "paramiko"]
-    assert remote_args
+def remote_case_config(remote_plugin:str,
+                        remote_protocol:str,
+                        remote_args:dict[str, typing.Any],
+                        case_name:str,
+                        script_name:str
+                        ) -> tuple[pybatch.LaunchParameters,
+                                   pybatch.GenericProtocol]:
     is_posix = True
     if "is_posix" in remote_args:
         is_posix = remote_args["is_posix"]
     job_params = create_launch_parameters(remote_args)
-    job_params.command = ["python3", "hello.py", "world"]
     job_params.work_directory = pybatch.tools.path_join(
                                                 job_params.work_directory,
-                                                "python_script",
+                                                case_name,
                                                 remote_plugin,
                                                 remote_protocol,
                                                 is_posix=is_posix)
     job_params.ntasks = 1
     current_file_dir = os.path.dirname(__file__)
-    script = Path(current_file_dir) / "scripts" / "hello.py"
+    script = Path(current_file_dir) / "scripts" / script_name
 
     job_params.input_files = [script]
     protocol = create_protocol(remote_protocol, remote_args)
+    return job_params, protocol
+
+
+def test_hello(remote_plugin:str,
+                remote_protocol:str,
+                remote_args:dict[str, typing.Any]) -> None:
+    job_params, protocol = remote_case_config(remote_plugin,
+                                              remote_protocol,
+                                              remote_args,
+                                              "hello",
+                                              "hello.py")
+    job_params.command = ["python3", "hello.py", "world"]
     job = pybatch.create_job(remote_plugin, job_params, protocol)
     job.submit()
     job.wait()
+    state = job.state()
+    assert state == "FINISHED"
     resultdir = tempfile.mkdtemp(suffix="_pybatchtest")
     job.get(["logs"], resultdir)
     output_file = Path(resultdir) / "logs" / "output.log"
     assert output_file.read_text() == "Hello world !\n"
+    shutil.rmtree(resultdir)
+
+def test_sleep(remote_plugin:str,
+                remote_protocol:str,
+                remote_args:dict[str, typing.Any]) -> None:
+    job_params, protocol = remote_case_config(remote_plugin,
+                                              remote_protocol,
+                                              remote_args,
+                                              "sleep",
+                                              "sleep.py")
+    job_params.command = ["python3", "sleep.py", "1"]
+    job = pybatch.create_job(remote_plugin, job_params, protocol)
+    job.submit()
+
+    state = job.state()
+    assert (state == "RUNNING") or (state == "QUEUED")
+    job.wait()
+    state = job.state()
+    assert state == "FINISHED"
+    resultdir = tempfile.mkdtemp(suffix="_pybatchtest")
+    job.get(["wakeup.txt"], resultdir)
+    result_file = Path(resultdir) / "wakeup.txt"
+    assert result_file.exists()
+    shutil.rmtree(resultdir)
+
+
+def test_cancel(remote_plugin:str,
+                remote_protocol:str,
+                remote_args:dict[str, typing.Any]) -> None:
+    job_params, protocol = remote_case_config(remote_plugin,
+                                              remote_protocol,
+                                              remote_args,
+                                              "cancel",
+                                              "sleep.py")
+    job_params.command = ["python3", "sleep.py", "3"]
+    job = pybatch.create_job(remote_plugin, job_params, protocol)
+    job.submit()
+
+    state = job.state()
+    assert (state == "RUNNING") or (state == "QUEUED")
+    job.cancel()
+    job.wait()
+    state = job.state()
+    assert state == "FAILED"
+    resultdir = tempfile.mkdtemp(suffix="_pybatchtest")
+    job.get(["."], resultdir)
+    result_file = Path(resultdir) / "wakeup.txt"
+    assert not result_file.exists()
     shutil.rmtree(resultdir)
 

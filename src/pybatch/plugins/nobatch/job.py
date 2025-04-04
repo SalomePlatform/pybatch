@@ -7,13 +7,16 @@ from ...protocols.local import LocalProtocol
 from ...tools import path_join, is_absolute
 
 class Job(GenericJob):
-    def __init__(self, param: LaunchParameters, protocol: GenericProtocol):
+    def __init__(self, param: LaunchParameters,
+                 protocol: GenericProtocol,
+                 remote_python_exe: str = "python3"):
         self.job_params = param
         if protocol is None:
             self.protocol = LocalProtocol()
         else:
             self.protocol = protocol
         self.jobid = ""
+        self.remote_python_exe = remote_python_exe
         self.remote_manager_path = path_join(param.work_directory,
                                              "pybatch_manager.py",
                                              is_posix=param.is_posix)
@@ -22,7 +25,6 @@ class Job(GenericJob):
     def submit(self) -> None:
         with self.protocol as protocol :
             try:
-                # TODO deal with no posix
                 if self.job_params.is_posix:
                     logdir = path_join(self.job_params.work_directory, "logs",
                                     is_posix=True)
@@ -33,14 +35,15 @@ class Job(GenericJob):
                 manager_script = file_dir / "pybatch_manager.py"
                 input_files = self.job_params.input_files + [manager_script]
                 protocol.upload(input_files, self.job_params.work_directory)
-                command = ["python3",
+                command = [self.remote_python_exe,
                            self.remote_manager_path,
                            "submit", self.job_params.work_directory]
                 # TODO convert from slurm formats (mm, mm:ss, h:mm:ss, etc.)
                 if self.job_params.wall_time:
                     command += ["--wall_time", self.job_params.wall_time]
                 command += self.job_params.command
-                self.jobid = protocol.run(command)
+                self.jobid = protocol.run(command).strip()
+                int(self.jobid) # check
             except Exception as e:
                 message = "Failed to submit job."
                 raise PybatchException(message) from e
@@ -52,7 +55,7 @@ class Job(GenericJob):
             return
         with self.protocol as protocol :
             try:
-                command = ["python3", self.remote_manager_path,
+                command = [self.remote_python_exe, self.remote_manager_path,
                            "wait", self.jobid]
                 protocol.run(command)
             except Exception as e:
@@ -65,7 +68,7 @@ class Job(GenericJob):
             return 'CREATED'
         with self.protocol as protocol :
             try:
-                command = ["python3", self.remote_manager_path,
+                command = [self.remote_python_exe, self.remote_manager_path,
                            "state", self.jobid, self.job_params.work_directory]
                 result = protocol.run(command).strip()
 
@@ -79,7 +82,7 @@ class Job(GenericJob):
             return
         with self.protocol as protocol :
             try:
-                command = ["python3", self.remote_manager_path,
+                command = [self.remote_python_exe, self.remote_manager_path,
                            "cancel", self.jobid]
                 protocol.run(command)
             except Exception as e:

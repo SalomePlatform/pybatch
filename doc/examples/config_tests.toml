@@ -1,7 +1,7 @@
 [remote]
-host = "cronos"
-plugins = ["nobatch", "slurm"]
-protocols = ["ssh", "paramiko"]
+host = "cronos" # use the name of a frontal (crfront1) for nobatch test
+plugins = ["nobatch", "slurm"] # plugins to test
+protocols = ["ssh", "paramiko"] # protocols to test
 work_dir = "/scratch/users/I35256/workingdir/pybatch"
 wckey = "P120K:SALOME"
 is_posix = true # use false for a remote Windows server.

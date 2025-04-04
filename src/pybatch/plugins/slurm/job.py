@@ -68,6 +68,7 @@ class Job(GenericJob):
                                        "--chdir", self.job_params.work_directory,
                                        batch_path])
                 self.jobid = output.split(";")[0].strip()
+                int(self.jobid) # check
             except Exception as e:
                 message = "Failed to submit job."
                 raise PybatchException(message) from e
@@ -81,22 +82,6 @@ class Job(GenericJob):
         while state != "FINISHED" and state != "FAILED":
             time.sleep(1)
             state = self.state()
-        # if state == "FINISHED" or state == "FAILED":
-        #     return
-        # # our job is not over.
-        # # we create another job to wait for the end of our job.
-        # with self.protocol as protocol :
-        #     try:
-        #         command = ["sbatch", f"--dependency=afterany:{self.jobid}",
-        #                    "--wait", "--kill-on-invalid-dep=yes",
-        #                 #    "--ntasks=1", "--ntasks-per-core=1", "--time=1",
-        #                    "--wrap='exit 0'"]
-        #         if self.job_params.wckey :
-        #             command.append(f"--wckey={self.job_params.wckey}")
-        #         protocol.run(command)
-        #     except Exception as e:
-        #         message = "Failed to wait job."
-        #         raise PybatchException(message) from e
 
     def state(self) -> str:
         """Possible states : 'CREATED', 'QUEUED', 'RUNNING',
@@ -136,7 +121,7 @@ class Job(GenericJob):
         command = ["scancel", self.jobid]
         try:
             with self.protocol as protocol :
-                code, output, err = protocol.run(command)
+                protocol.run(command)
         except Exception as e:
             raise PybatchException("Failed to cancel the job.") from e
 
