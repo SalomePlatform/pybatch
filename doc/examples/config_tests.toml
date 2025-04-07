@@ -1,14 +1,18 @@
 [remote]
-host = "cronos" # use the name of a frontal (crfront1) for nobatch test
+# run tests using a remote server
+host = "cronos1.hpc.edf.fr" # use the name of a frontal for nobatch test
 plugins = ["nobatch", "slurm"] # plugins to test
-protocols = ["ssh", "paramiko"] # protocols to test
+protocols = ["ssh", "paramiko"] # remote protocols to test
 work_dir = "/scratch/users/I35256/workingdir/pybatch"
 wckey = "P120K:SALOME"
 is_posix = true # use false for a remote Windows server.
 gss_auth = true # use kerberos authentication
 
 [local]
-# plugin "slurm" to test on the frontal of a cluster.
-# plugins = ["nobatch", "slurm"]
-plugins = ["nobatch"]
+# run local tests
+# plugins = ["nobatch", "slurm"] # on a frontal of a cluster
 # wckey = "P120K:SALOME"
+# By default, work_dir is on /tmp, but you should use another value when
+# running tests on a cluster frontal.
+#work_dir = "/scratch/users/I35256/workingdir/pybatch"
+plugins = ["nobatch"] # on a user workstation, without slurm
