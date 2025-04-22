@@ -93,25 +93,28 @@ class Job(GenericJob):
             with self.protocol as protocol :
                 # First try to query the job with "squeue" command
                 command = ["squeue", "-h", "-o", "%T", "-j", self.jobid]
-                output = protocol.run(command)
-                state = simplified_state(output)
-                squeue_state = state
-                if state:
-                    return state
+                squeue_state = protocol.run(command)
+                if squeue_state:
+                    state = simplified_state(squeue_state)
+                    if state:
+                        return state
 
                 # If "squeue" failed, the job may be finished.
                 # In this case, try to query the job with "sacct".
                 command = ["sacct", "-X", "-o", "State%-10", "-n",
                            "-j", self.jobid]
-                output = protocol.run(command)
-                state = simplified_state(output)
-                sacct_state = state
+                sacct_state = protocol.run(command)
+                if not sacct_state:
+                    # Give some time to slurm scheduler to update
+                    time.sleep(1)
+                    sacct_state = protocol.run(command)
+                state = simplified_state(sacct_state)
         except Exception as e:
             raise PybatchException("Failed to get the state of the job.") from e
         if state:
             return state
         else:
-            raise PybatchException(f"Unknown state. squestae: {squeue_state}, sacct_state:{sacct_state}")
+            raise PybatchException(f"Unknown state. squeue_state: {squeue_state}, sacct_state:{sacct_state}")
 
 
     def cancel(self) -> None:

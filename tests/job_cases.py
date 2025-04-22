@@ -60,3 +60,13 @@ def test_cancel(plugin:str,
     result_file = Path(resultdir) / "wakeup.txt"
     assert not result_file.exists()
     shutil.rmtree(resultdir)
+
+def test_error(plugin:str,
+               protocol:pybatch.GenericProtocol,
+               job_params:pybatch.LaunchParameters) -> None:
+    job_params.command = ["python3", "error.py"]
+    job = pybatch.create_job(plugin, job_params, protocol)
+    job.submit()
+    job.wait()
+    state = job.state()
+    assert state == "FAILED"

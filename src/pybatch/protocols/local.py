@@ -56,7 +56,8 @@ class LocalProtocol():
 
 
     def run(self, command):
-        proc = subprocess.run(command, capture_output=True, text=True)
+        proc = subprocess.run(command, capture_output=True, text=True,
+                              check=True)
         ret_code = proc.returncode
         if ret_code != 0 :
             message = f"""Error {ret_code}.

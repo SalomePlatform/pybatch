@@ -98,7 +98,7 @@ def state(proc_id, workdir):
     else:
         exit_log = Path(workdir) / "logs" / "exit_code.log"
         if exit_log.is_file():
-            exit_value = exit_log.read_text()
+            exit_value = exit_log.read_text().strip()
             if exit_value == "0":
                 print("FINISHED")
             else:
