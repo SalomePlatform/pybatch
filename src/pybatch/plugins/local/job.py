@@ -84,7 +84,7 @@ class Job(GenericJob):
         pu.terminate()
 
     def get(self,
-            remote_paths: list[str | Path],
+            remote_paths: list[str],
             local_path: str | Path) -> None:
         """Copy a file or directory from the remote work directory.
 
@@ -95,8 +95,8 @@ class Job(GenericJob):
             if os.path.isabs(path):
                 abs_remote_path = path
             else:
-                abs_remote_path = Path(self.work_directory) / path
-                abs_remote_path = os.path.realpath(abs_remote_path)
+                tmp_path = Path(self.work_directory) / path
+                abs_remote_path = os.path.realpath(tmp_path)
             copy(abs_remote_path, local_path)
 
     def config(self) -> dict[str, typing.Any]:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 import typing
-
+from collections.abc import Iterable
 from pathlib import Path
 import shutil
 import subprocess
@@ -23,39 +23,45 @@ def copy(src: str | Path, dest: str | Path) -> None:
 
 class LocalProtocol():
     "Protocol for localhost."
-    def __init__(self, params=None):
+    def __init__(self, params:typing.Any=None):
         pass
-    def __enter__(self):
+    def __enter__(self):# type: ignore
         return self
-    def __exit__(self, _type, _value, _traceback):
+    def __exit__(self, _type, _value, _traceback):# type: ignore
         pass
 
 
-    def open(self):
+    def open(self)->None:
         "Open session."
         pass
 
 
-    def close(self):
+    def close(self)->None:
         "Close session."
         pass
 
 
-    def upload(self, local_entries, remote_path):
+    def upload(self,
+               local_entries:Iterable[str|Path],
+               remote_path:str
+               )->None:
         for entry in local_entries:
             copy(entry, remote_path)
 
 
-    def download(self, remote_entries, local_path):
+    def download(self,
+                 remote_entries:Iterable[str],
+                 local_path: str|Path
+                )-> None:
         for entry in remote_entries:
             copy(entry, local_path)
 
 
-    def create(self, remote_path, content):
+    def create(self, remote_path:str, content:str) -> None:
         Path(remote_path).write_text(content)
 
 
-    def run(self, command):
+    def run(self, command:list[str]) -> str:
         proc = subprocess.run(command, capture_output=True, text=True,
                               check=True)
         ret_code = proc.returncode

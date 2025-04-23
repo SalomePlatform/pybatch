@@ -1,7 +1,8 @@
 from __future__ import annotations
 import pathlib
 
-def path_join(base:str, *paths:list[str], is_posix:bool) -> str:
+def path_join(base:str, *paths:str, is_posix:bool) -> str:
+    result:pathlib.PurePath
     if is_posix:
         result = pathlib.PurePosixPath(base)
     else:

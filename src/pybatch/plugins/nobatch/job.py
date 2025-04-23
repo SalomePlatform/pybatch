@@ -11,6 +11,7 @@ class Job(GenericJob):
                  protocol: GenericProtocol,
                  remote_python_exe: str = "python3"):
         self.job_params = param
+        self.protocol:GenericProtocol
         if protocol is None:
             self.protocol = LocalProtocol()
         else:
@@ -70,7 +71,7 @@ class Job(GenericJob):
             try:
                 command = [self.remote_python_exe, self.remote_manager_path,
                            "state", self.jobid, self.job_params.work_directory]
-                result = protocol.run(command).strip()
+                result:str = protocol.run(command).strip()
 
             except Exception as e:
                 message = "Failed to wait job."

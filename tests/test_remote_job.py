@@ -16,6 +16,7 @@ def create_launch_parameters(config:dict[str, typing.Any]
         params.wckey = config["wckey"]
     if "is_posix" in config:
         params.is_posix = config["is_posix"]
+    params.wall_time = "1" # one minute
     return params
 
 

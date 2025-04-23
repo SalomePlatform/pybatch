@@ -8,6 +8,7 @@ server.
 """
 # No typing for better compatibility with older python versions.
 # (edf gaia - python 3.5)
+# mypy: ignore-errors
 import argparse
 import subprocess
 import signal

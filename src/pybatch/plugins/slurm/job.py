@@ -37,8 +37,9 @@ def simplified_state(name:str) -> str:
     return ""
 
 class Job(GenericJob):
-    def __init__(self, param: LaunchParameters, protocol: GenericProtocol):
+    def __init__(self, param: LaunchParameters, protocol: GenericProtocol|None):
         self.job_params = param
+        self.protocol:GenericProtocol
         if protocol is None:
             self.protocol = LocalProtocol()
         else:

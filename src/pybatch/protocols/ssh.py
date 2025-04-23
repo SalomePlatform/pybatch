@@ -1,3 +1,6 @@
+from __future__ import annotations
+from collections.abc import Iterable
+from pathlib import Path
 import subprocess
 from ..parameter import ConnexionParameters
 
@@ -8,26 +11,29 @@ class SshProtocol():
         self._password = params.password #TODO not supported yet
         self._gss_auth = params.gss_auth
 
-    def __enter__(self):
+    def __enter__(self): # type: ignore
         return self
 
 
-    def __exit__(self, _type, _value, _traceback):
+    def __exit__(self, _type, _value, _traceback): # type: ignore
         pass
 
 
-    def open(self):
+    def open(self)->None:
         "Open session."
         pass
 
 
-    def close(self):
+    def close(self)->None:
         "Close session."
         pass
 
 
-    def upload(self, local_entries, remote_path):
-        full_command = ["scp", "-r"] + local_entries
+    def upload(self,
+               local_entries:Iterable[str|Path],
+               remote_path:str
+               )->None:
+        full_command = ["scp", "-r"] + list(local_entries)
         destination = ""
         if self._user:
             destination += self._user + "@"
@@ -39,7 +45,10 @@ class SshProtocol():
                               check=True)
 
 
-    def download(self, remote_entries, local_path):
+    def download(self,
+                 remote_entries:Iterable[str],
+                 local_path: str|Path
+                )-> None:
         command = ["scp", "-r"]
         remote_id = "" 
         if self._user:
@@ -50,7 +59,7 @@ class SshProtocol():
             subprocess.run(full_command, capture_output=True, text=True,
                            check=True)
 
-    def create(self, remote_path, content):
+    def create(self, remote_path:str, content:str) -> None:
         full_command = ["ssh", "-T", self._host]
         if self._user:
             full_command += ["-l", self._user]
@@ -61,7 +70,7 @@ class SshProtocol():
                        capture_output=True, text=True, check=True)
 
 
-    def run(self, command):
+    def run(self, command:list[str]) -> str:
         full_command = ["ssh", self._host]
         if self._user:
             full_command += ["-l", self._user]
