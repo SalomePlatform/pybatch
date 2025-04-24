@@ -22,7 +22,7 @@ def test_hello(plugin:str,
 def test_sleep(plugin:str,
                protocol:pybatch.GenericProtocol,
                job_params:pybatch.LaunchParameters) -> None:
-    job_params.command = ["python3", "sleep.py", "2"]
+    job_params.command = ["python3", "sleep.py", "10"]
     job = pybatch.create_job(plugin, job_params, protocol)
     job.submit()
 
@@ -41,7 +41,7 @@ def test_sleep(plugin:str,
 def test_cancel(plugin:str,
                protocol:pybatch.GenericProtocol,
                job_params:pybatch.LaunchParameters) -> None:
-    job_params.command = ["python3", "sleep.py", "5"]
+    job_params.command = ["python3", "sleep.py", "10"]
     job = pybatch.create_job(plugin, job_params, protocol)
     job.submit()
 
