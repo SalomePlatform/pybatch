@@ -2,6 +2,7 @@ __all__ = [
     "GenericJob",
     "GenericProtocol",
     "LaunchParameters",
+    "ConnexionParameters",
     "create_job",
     "PybatchException",
 ]

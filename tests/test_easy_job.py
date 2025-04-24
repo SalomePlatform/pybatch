@@ -135,7 +135,7 @@ def test_wall_time(job_plugin):
         ["python3", "sleep.py", "3"],
         workdir,
         input_files=[script],
-        wall_time="1",
+        wall_time="0:1", # 1s
     )
     job = pybatch.create_job(job_plugin, params)
     job.submit()

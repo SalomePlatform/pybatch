@@ -4,7 +4,7 @@ import os
 
 from ... import GenericJob, GenericProtocol, LaunchParameters, PybatchException
 from ...protocols.local import LocalProtocol
-from ...tools import path_join, is_absolute
+from ...tools import path_join, is_absolute, slurm_time_to_seconds
 
 class Job(GenericJob):
     def __init__(self, param: LaunchParameters,
@@ -39,9 +39,9 @@ class Job(GenericJob):
                 command = [self.remote_python_exe,
                            self.remote_manager_path,
                            "submit", self.job_params.work_directory]
-                # TODO convert from slurm formats (mm, mm:ss, h:mm:ss, etc.)
                 if self.job_params.wall_time:
-                    command += ["--wall_time", self.job_params.wall_time]
+                    seconds = slurm_time_to_seconds(self.job_params.wall_time)
+                    command += ["--wall_time", seconds]
                 command += self.job_params.command
                 self.jobid = protocol.run(command).strip()
                 int(self.jobid) # check

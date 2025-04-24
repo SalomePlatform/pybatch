@@ -66,7 +66,7 @@ def submit(workdir, command, wall_time):
         proc.terminate()
         print("Timeout expired! Terminate child.")
         exit_code = proc.wait()
-    exit_log = log_path / "exit_code.log"
+    exit_log = str(log_path / "exit_code.log") # python 3.5
     with open(exit_log, "w") as exit_file:
         exit_file.write(str(exit_code))
 

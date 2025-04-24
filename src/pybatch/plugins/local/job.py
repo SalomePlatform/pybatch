@@ -1,7 +1,8 @@
 from __future__ import annotations
 import typing
 
-from pybatch import GenericJob, LaunchParameters, PybatchException
+from ... import GenericJob, LaunchParameters, PybatchException
+from ...tools import slurm_time_to_seconds
 from pathlib import Path
 import shutil
 import subprocess
@@ -30,7 +31,7 @@ class Job(GenericJob):
         self.work_directory = param.work_directory
         self.preprocess = param.preprocess
         self.input_files = param.input_files
-        self.wall_time = param.wall_time
+        self.wall_time = slurm_time_to_seconds(param.wall_time)
         self.pid = -1  # job not launched
         # TODO We could also use ntasks and mem_per_node to set
         # limits using resource module.

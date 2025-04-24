@@ -1,7 +1,5 @@
-import typing
 from pathlib import Path
 import tempfile
-import os
 import shutil
 
 import pybatch
@@ -29,8 +27,7 @@ def test_sleep(plugin:str,
     job.submit()
 
     state = job.state()
-    print("state:", state)
-    assert (state == "RUNNING") or (state == "QUEUED")
+    assert state in ["RUNNING", "QUEUED"]
     job.wait()
     state = job.state()
     assert state == "FINISHED"
@@ -49,11 +46,10 @@ def test_cancel(plugin:str,
     job.submit()
 
     state = job.state()
-    assert (state == "RUNNING") or (state == "QUEUED")
+    assert state in ["RUNNING", "QUEUED"]
     job.cancel()
     job.wait()
     state = job.state()
-    print("state:", state)
     assert state == "FAILED"
     resultdir = tempfile.mkdtemp(suffix="_pybatchtest")
     job.get(["."], resultdir)
