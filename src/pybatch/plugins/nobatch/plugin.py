@@ -8,9 +8,8 @@ class Plugin:
     def description(self) -> str:
         return """Remote execution without any batch manager."""
 
-    def create_job(self,
-                   param: LaunchParameters,
-                   connection_protocol: GenericProtocol
-                   ) -> GenericJob:
+    def create_job(
+        self, param: LaunchParameters, connection_protocol: GenericProtocol
+    ) -> GenericJob:
         # TODO
         return Job(param, connection_protocol)

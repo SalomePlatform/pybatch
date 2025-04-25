@@ -52,6 +52,7 @@ class LaunchParameters:
     input_files: list[str | Path] = field(default_factory=list)
     is_posix: bool = True
 
+
 @dataclass
 class ConnexionParameters:
     """Parameters needed to connect to a remote server.
@@ -64,6 +65,7 @@ class ConnexionParameters:
     * gss_auth - use the gss api for authentication. It has to be True when
       using Kerberos protocole.
     """
+
     host: str = ""
     user: str | None = None
     password: str | None = None

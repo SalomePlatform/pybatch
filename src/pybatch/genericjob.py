@@ -1,5 +1,6 @@
 import typing
 
+
 class GenericJob(typing.Protocol):
     "Job protocol to be implemented."
 

@@ -5,10 +5,11 @@ from .generic_protocol import GenericProtocol
 from .parameter import LaunchParameters
 
 
-def create_job(plugin_name: str,
-               params: LaunchParameters,
-               connection_protocol: GenericProtocol | None = None
-               ) -> GenericJob:
+def create_job(
+    plugin_name: str,
+    params: LaunchParameters,
+    connection_protocol: GenericProtocol | None = None,
+) -> GenericJob:
     """Create the job with the chosen plugin.
 
     :param plugin_name: name of the plugin to use for the job creation.

@@ -84,9 +84,7 @@ class Job(GenericJob):
         pu = psutil.Process(self.pid)
         pu.terminate()
 
-    def get(self,
-            remote_paths: list[str],
-            local_path: str | Path) -> None:
+    def get(self, remote_paths: list[str], local_path: str | Path) -> None:
         """Copy a file or directory from the remote work directory.
 
         :param remote_path: path relative to work directory on the remote host.

@@ -1,6 +1,7 @@
 def test_slurm_time_to_seconds():
     from pybatch.tools import slurm_time_to_seconds as converter
     from pybatch import PybatchException
+
     assert converter(" ") == ""
     assert converter("10") == "600"
     assert converter("10:30") == "630"
@@ -15,16 +16,16 @@ def test_slurm_time_to_seconds():
     except PybatchException:
         pass
     else:
-        assert 0 # Exception expected
+        assert 0  # Exception expected
     try:
         converter("xvi")
     except PybatchException:
         pass
     else:
-        assert 0 # Exception expected
+        assert 0  # Exception expected
     try:
         converter("1:2:3:4")
     except PybatchException:
         pass
     else:
-        assert 0 # Exception expected
+        assert 0  # Exception expected

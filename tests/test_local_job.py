@@ -9,12 +9,10 @@ import os
 
 import tests.job_cases
 
-def local_case_config(plugin,
-                      config:dict[str, typing.Any],
-                      case_name:str,
-                      script_name:str
-                     ) -> tuple[pybatch.LaunchParameters,
-                                pybatch.GenericProtocol]:
+
+def local_case_config(
+    plugin, config: dict[str, typing.Any], case_name: str, script_name: str
+) -> tuple[pybatch.LaunchParameters, pybatch.GenericProtocol]:
     if "work_dir" in config:
         work_dir = os.path.join(config["work_dir"], case_name, plugin)
     else:
@@ -30,36 +28,30 @@ def local_case_config(plugin,
     protocol = pybatch.protocols.local.LocalProtocol()
     return params, protocol
 
-def test_hello(local_plugin:str,
-                local_args:dict[str, typing.Any]) -> None:
-    job_params, protocol = local_case_config(local_plugin,
-                                              local_args,
-                                              "hello",
-                                              "hello.py")
+
+def test_hello(local_plugin: str, local_args: dict[str, typing.Any]) -> None:
+    job_params, protocol = local_case_config(
+        local_plugin, local_args, "hello", "hello.py"
+    )
     tests.job_cases.test_hello(local_plugin, protocol, job_params)
 
-def test_sleep(local_plugin:str,
-                local_args:dict[str, typing.Any]) -> None:
-    job_params, protocol = local_case_config(local_plugin,
-                                              local_args,
-                                              "sleep",
-                                              "sleep.py")
+
+def test_sleep(local_plugin: str, local_args: dict[str, typing.Any]) -> None:
+    job_params, protocol = local_case_config(
+        local_plugin, local_args, "sleep", "sleep.py"
+    )
     tests.job_cases.test_sleep(local_plugin, protocol, job_params)
 
 
-def test_cancel(local_plugin:str,
-                local_args:dict[str, typing.Any]) -> None:
-    job_params, protocol = local_case_config(local_plugin,
-                                              local_args,
-                                              "cancel",
-                                              "sleep.py")
+def test_cancel(local_plugin: str, local_args: dict[str, typing.Any]) -> None:
+    job_params, protocol = local_case_config(
+        local_plugin, local_args, "cancel", "sleep.py"
+    )
     tests.job_cases.test_cancel(local_plugin, protocol, job_params)
 
 
-def test_error(local_plugin:str,
-                local_args:dict[str, typing.Any]) -> None:
-    job_params, protocol = local_case_config(local_plugin,
-                                              local_args,
-                                              "error",
-                                              "error.py")
+def test_error(local_plugin: str, local_args: dict[str, typing.Any]) -> None:
+    job_params, protocol = local_case_config(
+        local_plugin, local_args, "error", "error.py"
+    )
     tests.job_cases.test_error(local_plugin, protocol, job_params)

@@ -4,9 +4,12 @@ import shutil
 
 import pybatch
 
-def test_hello(plugin:str,
-               protocol:pybatch.GenericProtocol,
-               job_params:pybatch.LaunchParameters) -> None:
+
+def test_hello(
+    plugin: str,
+    protocol: pybatch.GenericProtocol,
+    job_params: pybatch.LaunchParameters,
+) -> None:
     job_params.command = ["python3", "hello.py", "world"]
     job = pybatch.create_job(plugin, job_params, protocol)
     job.submit()
@@ -19,9 +22,12 @@ def test_hello(plugin:str,
     assert output_file.read_text() == "Hello world !\n"
     shutil.rmtree(resultdir)
 
-def test_sleep(plugin:str,
-               protocol:pybatch.GenericProtocol,
-               job_params:pybatch.LaunchParameters) -> None:
+
+def test_sleep(
+    plugin: str,
+    protocol: pybatch.GenericProtocol,
+    job_params: pybatch.LaunchParameters,
+) -> None:
     job_params.command = ["python3", "sleep.py", "10"]
     job = pybatch.create_job(plugin, job_params, protocol)
     job.submit()
@@ -38,9 +44,11 @@ def test_sleep(plugin:str,
     shutil.rmtree(resultdir)
 
 
-def test_cancel(plugin:str,
-               protocol:pybatch.GenericProtocol,
-               job_params:pybatch.LaunchParameters) -> None:
+def test_cancel(
+    plugin: str,
+    protocol: pybatch.GenericProtocol,
+    job_params: pybatch.LaunchParameters,
+) -> None:
     job_params.command = ["python3", "sleep.py", "10"]
     job = pybatch.create_job(plugin, job_params, protocol)
     job.submit()
@@ -57,9 +65,12 @@ def test_cancel(plugin:str,
     assert not result_file.exists()
     shutil.rmtree(resultdir)
 
-def test_error(plugin:str,
-               protocol:pybatch.GenericProtocol,
-               job_params:pybatch.LaunchParameters) -> None:
+
+def test_error(
+    plugin: str,
+    protocol: pybatch.GenericProtocol,
+    job_params: pybatch.LaunchParameters,
+) -> None:
     job_params.command = ["python3", "error.py"]
     job = pybatch.create_job(plugin, job_params, protocol)
     job.submit()

@@ -2,8 +2,9 @@ from __future__ import annotations
 import pathlib
 from . import PybatchException
 
-def path_join(base:str, *paths:str, is_posix:bool) -> str:
-    result:pathlib.PurePath
+
+def path_join(base: str, *paths: str, is_posix: bool) -> str:
+    result: pathlib.PurePath
     if is_posix:
         result = pathlib.PurePosixPath(base)
     else:
@@ -12,14 +13,16 @@ def path_join(base:str, *paths:str, is_posix:bool) -> str:
         result = result / path
     return str(result)
 
-def is_absolute(path:str, is_posix:bool) -> bool:
+
+def is_absolute(path: str, is_posix: bool) -> bool:
     if is_posix:
         return pathlib.PurePosixPath(path).is_absolute()
     else:
         return pathlib.PureWindowsPath(path).is_absolute()
 
-def slurm_time_to_seconds(val:str) -> str:
-    """ Convert a slurm time format string to seconds.
+
+def slurm_time_to_seconds(val: str) -> str:
+    """Convert a slurm time format string to seconds.
 
     See https://slurm.schedmd.com/sbatch.html#OPT_time
     Acceptable time formats:
@@ -45,20 +48,20 @@ def slurm_time_to_seconds(val:str) -> str:
             minutes = int(hour_split[1])
             seconds = int(hour_split[2])
         elif len(hour_split) == 2:
-            if days > 0: # days-hours:minutes
+            if days > 0:  # days-hours:minutes
                 hours = int(hour_split[0])
                 minutes = int(hour_split[1])
                 seconds = 0
-            else: # minutes:seconds
+            else:  # minutes:seconds
                 hours = 0
                 minutes = int(hour_split[0])
                 seconds = int(hour_split[1])
         elif len(hour_split) == 1:
-            if days > 0: # days-hours
+            if days > 0:  # days-hours
                 hours = int(hour_split[0])
                 minutes = 0
                 seconds = 0
-            else: # minutes
+            else:  # minutes
                 hours = 0
                 minutes = int(hour_split[0])
                 seconds = 0

@@ -8,6 +8,7 @@ import inspect
 import subprocess
 import time
 
+
 def test_hello():
     workdir = tempfile.mkdtemp(suffix="_pybatchtest")
     current_file_dir = os.path.dirname(__file__)
@@ -16,8 +17,15 @@ def test_hello():
     manager_script = shutil.copy(inspect.getfile(manager), workdir)
 
     # submit
-    args = ["python3", manager_script, "submit", workdir,
-            "python3", "hello.py", "zozo"]
+    args = [
+        "python3",
+        manager_script,
+        "submit",
+        workdir,
+        "python3",
+        "hello.py",
+        "zozo",
+    ]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
     pid = proc.stdout.strip()
@@ -49,8 +57,15 @@ def test_sleep():
     manager_script = shutil.copy(inspect.getfile(manager), workdir)
 
     # submit long job
-    args = ["python3", manager_script, "submit", workdir,
-            "python3", "sleep.py", "1"]
+    args = [
+        "python3",
+        manager_script,
+        "submit",
+        workdir,
+        "python3",
+        "sleep.py",
+        "1",
+    ]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
     pid = proc.stdout.strip()
@@ -80,6 +95,7 @@ def test_sleep():
     # clean
     shutil.rmtree(workdir)
 
+
 def test_cancel():
     workdir = tempfile.mkdtemp(suffix="_pybatchtest")
     current_file_dir = os.path.dirname(__file__)
@@ -88,8 +104,15 @@ def test_cancel():
     manager_script = shutil.copy(inspect.getfile(manager), workdir)
 
     # submit long job
-    args = ["python3", manager_script, "submit", workdir,
-            "python3", "sleep.py", "1"]
+    args = [
+        "python3",
+        manager_script,
+        "submit",
+        workdir,
+        "python3",
+        "sleep.py",
+        "1",
+    ]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
     pid = proc.stdout.strip()
@@ -122,9 +145,9 @@ def test_cancel():
     # clean
     shutil.rmtree(workdir)
 
+
 def test_timeout():
-    """Wall time shorter than execution time.
-    """
+    """Wall time shorter than execution time."""
     workdir = tempfile.mkdtemp(suffix="_pybatchtest")
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "sleep.py"
@@ -132,9 +155,17 @@ def test_timeout():
     manager_script = shutil.copy(inspect.getfile(manager), workdir)
 
     # submit long job
-    args = ["python3", manager_script, "submit", workdir,
-            "--wall_time", "1",
-            "python3", "sleep.py", "3"]
+    args = [
+        "python3",
+        manager_script,
+        "submit",
+        workdir,
+        "--wall_time",
+        "1",
+        "python3",
+        "sleep.py",
+        "3",
+    ]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
     pid = proc.stdout.strip()
@@ -159,15 +190,16 @@ def test_timeout():
     result_file = Path(workdir) / "wakeup.txt"
     assert not result_file.exists()
     manager_log = Path(workdir) / "logs" / "manager.log"
-    assert manager_log.read_text().strip() == "Timeout expired! Terminate child."
+    assert (
+        manager_log.read_text().strip() == "Timeout expired! Terminate child."
+    )
 
     # clean
     shutil.rmtree(workdir)
 
 
 def test_notimeout():
-    """Walltime longer than execution time.
-    """
+    """Walltime longer than execution time."""
     workdir = tempfile.mkdtemp(suffix="_pybatchtest")
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "sleep.py"
@@ -175,9 +207,17 @@ def test_notimeout():
     manager_script = shutil.copy(inspect.getfile(manager), workdir)
 
     # submit
-    args = ["python3", manager_script, "submit", workdir,
-            "--wall_time", "3",
-            "python3", "sleep.py", "1"]
+    args = [
+        "python3",
+        manager_script,
+        "submit",
+        workdir,
+        "--wall_time",
+        "3",
+        "python3",
+        "sleep.py",
+        "1",
+    ]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
     pid = proc.stdout.strip()

@@ -9,8 +9,7 @@ class Plugin:
     def description(self) -> str:
         return """Job submission using slurm batch manager."""
 
-    def create_job(self,
-                   param: LaunchParameters,
-                   connection_protocol: GenericProtocol
-                   ) -> GenericJob:
+    def create_job(
+        self, param: LaunchParameters, connection_protocol: GenericProtocol
+    ) -> GenericJob:
         return Job(param, connection_protocol)
