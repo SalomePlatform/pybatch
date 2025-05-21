@@ -3,10 +3,10 @@ import typing
 from collections.abc import Iterable
 from pathlib import Path
 import shutil
-import subprocess
 import os
 
 from .. import PybatchException
+from ..tools import run_check
 
 
 def copy(src: str | Path, dest: str | Path) -> None:
@@ -59,16 +59,7 @@ class LocalProtocol:
         Path(remote_path).write_text(content)
 
     def run(self, command: list[str]) -> str:
-        proc = subprocess.run(
-            command, capture_output=True, text=True, check=True
-        )
-        ret_code = proc.returncode
-        if ret_code != 0:
-            message = f"""Error {ret_code}.
-  command: {command}.
-  stderr: {proc.stderr}
-"""
-            raise PybatchException(message)
+        proc = run_check(command)
         return proc.stdout
 
 

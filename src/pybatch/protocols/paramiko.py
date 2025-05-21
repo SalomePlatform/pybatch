@@ -23,12 +23,16 @@ class ParamikoProtocol:
         self.close()
 
     def open(self) -> None:
-        self.client.connect(
-            self.params.host,
-            username=self.params.user,
-            password=self.params.password,
-            gss_auth=self.params.gss_auth,
-        )
+        try:
+            self.client.connect(
+                self.params.host,
+                username=self.params.user,
+                password=self.params.password,
+                gss_auth=self.params.gss_auth,
+            )
+        except Exception as e:
+            message = f"Failed to open ssh connection to {self.params.host}."
+            raise PybatchException(message) from e
 
     def close(self) -> None:
         "Close session."

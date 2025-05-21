@@ -1,8 +1,8 @@
 from __future__ import annotations
 from collections.abc import Iterable
 from pathlib import Path
-import subprocess
 from ..parameter import ConnexionParameters
+from ..tools import run_check
 
 
 class SshProtocol:
@@ -29,13 +29,14 @@ class SshProtocol:
     def upload(
         self, local_entries: Iterable[str | Path], remote_path: str
     ) -> None:
-        full_command = ["scp", "-r"] + list(local_entries)
+        # conversion Path to str for mypy
+        full_command = ["scp", "-r"] + list(str(x) for x in local_entries)
         destination = ""
         if self._user:
             destination += self._user + "@"
         destination += self._host + ':"' + remote_path + '"'
         full_command.append(destination)
-        subprocess.run(full_command, capture_output=True, text=True, check=True)
+        run_check(full_command)
 
     def download(
         self, remote_entries: Iterable[str], local_path: str | Path
@@ -46,10 +47,11 @@ class SshProtocol:
             remote_id += self._user + "@"
         remote_id += self._host + ":"
         for entry in remote_entries:
-            full_command = command + [remote_id + '"' + entry + '"', local_path]
-            subprocess.run(
-                full_command, capture_output=True, text=True, check=True
-            )
+            full_command = command + [
+                remote_id + '"' + entry + '"',
+                str(local_path),
+            ]
+            run_check(full_command)
 
     def create(self, remote_path: str, content: str) -> None:
         full_command = ["ssh", "-T", self._host]
@@ -58,13 +60,7 @@ class SshProtocol:
         if self._gss_auth:
             full_command.append("-K")
         full_command.append(f"cat > '{remote_path}'")
-        subprocess.run(
-            full_command,
-            input=content,
-            capture_output=True,
-            text=True,
-            check=True,
-        )
+        run_check(full_command, input=content)
 
     def run(self, command: list[str]) -> str:
         full_command = ["ssh", self._host]
@@ -73,9 +69,7 @@ class SshProtocol:
         if self._gss_auth:
             full_command.append("-K")
         full_command += command
-        proc = subprocess.run(
-            full_command, capture_output=True, text=True, check=True
-        )
+        proc = run_check(full_command)
         return proc.stdout
 
 

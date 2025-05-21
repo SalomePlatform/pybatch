@@ -1,6 +1,8 @@
 from __future__ import annotations
 import pathlib
 from . import PybatchException
+import subprocess
+import typing
 
 
 def path_join(base: str, *paths: str, is_posix: bool) -> str:
@@ -71,3 +73,17 @@ def slurm_time_to_seconds(val: str) -> str:
         raise PybatchException(f"Invalid time format: {val}.") from e
     result = seconds + 60 * minutes + 3600 * hours + 24 * 3600 * days
     return str(result)
+
+
+def run_check(
+    command: list[str], **extra: typing.Any
+) -> subprocess.CompletedProcess[str]:
+    proc = subprocess.run(command, capture_output=True, text=True, **extra)
+    ret_code = proc.returncode
+    if ret_code != 0:
+        message = f"""Error {ret_code}.
+  command: {command}.
+  stderr: {proc.stderr}
+"""
+        raise PybatchException(message)
+    return proc
