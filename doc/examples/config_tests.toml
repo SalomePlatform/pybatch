@@ -3,6 +3,7 @@
 host = "cronos1.hpc.edf.fr" # use the name of a frontal for nobatch test
 plugins = ["nobatch", "slurm"] # plugins to test
 protocols = ["ssh", "paramiko"] # remote protocols to test
+# work_dir should exist with read&write access and should be empty.
 work_dir = "/scratch/users/I35256/workingdir/pybatch"
 wckey = "P120K:SALOME"
 is_posix = true # use false for a remote Windows server.
