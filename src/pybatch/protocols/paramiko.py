@@ -5,6 +5,7 @@ import paramiko
 import scp  # type: ignore
 from ..parameter import ConnexionParameters
 from .. import PybatchException
+from ..tools import escape_str
 
 
 class ParamikoProtocol:
@@ -60,12 +61,11 @@ class ParamikoProtocol:
     def run(self, command: list[str]) -> str:
         # in case of issues with big stdout|stderr see
         # https://github.com/paramiko/paramiko/issues/563
+        if len(command) == 0:
+            raise PybatchException("Empty command.")
         str_command = command[0]
         for arg in command[1:]:
-            if " " in arg:
-                str_command += ' "' + arg + '"'
-            else:
-                str_command += " " + arg
+            str_command += " " + escape_str(arg)
         stdin, stdout, stderr = self.client.exec_command(str_command)
         stdin.close()
         str_std = stdout.read().decode()

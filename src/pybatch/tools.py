@@ -87,3 +87,21 @@ def run_check(
 """
         raise PybatchException(message)
     return proc
+
+
+def escape_str(val: str) -> str:
+    """Escape characters with special meaning in bash.
+    a'b -> 'a'\''b'
+    a b -> 'a b'
+    """
+    special_chars = " ()[]{}*?$#'\\"
+    special_found = False
+    for c in special_chars:
+        if c in val:
+            special_found = True
+            break
+    if special_found:
+        result = "'" + val.replace("'", "'\\''") + "'"
+    else:
+        result = val
+    return result

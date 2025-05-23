@@ -2,7 +2,8 @@ from __future__ import annotations
 from collections.abc import Iterable
 from pathlib import Path
 from ..parameter import ConnexionParameters
-from ..tools import run_check
+from ..tools import run_check, escape_str
+from .. import PybatchException
 
 
 class SshProtocol:
@@ -63,12 +64,16 @@ class SshProtocol:
         run_check(full_command, input=content)
 
     def run(self, command: list[str]) -> str:
+        if len(command) == 0:
+            raise PybatchException("Empty command.")
         full_command = ["ssh", self._host]
         if self._user:
             full_command += ["-l", self._user]
         if self._gss_auth:
             full_command.append("-K")
-        full_command += command
+        full_command.append(command[0])
+        for arg in command[1:]:
+            full_command.append(escape_str(arg))
         proc = run_check(full_command)
         return proc.stdout
 

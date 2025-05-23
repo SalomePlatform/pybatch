@@ -7,16 +7,20 @@ import pybatch
 import pybatch.protocols.ssh
 from pybatch.tools import path_join
 
+
 def test_protocol_ssh(remote_args: dict[str, typing.Any]) -> None:
     # Test connection to a host that does not exist
     connect_param = pybatch.ConnexionParameters(host="noname_zozo")
     protocol = pybatch.protocols.ssh.SshProtocol(connect_param)
     with protocol as p:
         try:
-            p.run(["python3", "-c", "'exit(0)'"])
+            p.run(["python3", "-c", "exit(0)"])
         except pybatch.PybatchException as e:
             assert "noname_zozo" in str(e)
-            assert """command: ['ssh', 'noname_zozo', 'python3', '-c', """  in str(e)
+            assert (
+                """command: ['ssh', 'noname_zozo', 'python3', '-c', """
+                in str(e)
+            )
         else:
             assert 0
 
@@ -29,31 +33,30 @@ def test_protocol_ssh(remote_args: dict[str, typing.Any]) -> None:
     is_posix = True
     if "is_posix" in remote_args:
         is_posix = remote_args["is_posix"]
-    connect_param = pybatch.ConnexionParameters(host = hostname,
-                                                gss_auth = gss_auth)
+    connect_param = pybatch.ConnexionParameters(
+        host=hostname, gss_auth=gss_auth
+    )
     protocol = pybatch.protocols.ssh.SshProtocol(connect_param)
     local_work_dir = tempfile.mkdtemp(suffix="_pybatchtest")
     test_file_name = "ssh_test.txt"
-    remote_test_file = path_join(work_dir,
-                                 test_file_name,
-                                 is_posix=is_posix)
+    remote_test_file = path_join(work_dir, test_file_name, is_posix=is_posix)
     local_test_file = os.path.join(local_work_dir, test_file_name)
     with protocol as p:
         # Test download a remote path that does not exist.
         try:
             p.download([remote_test_file], local_test_file)
         except pybatch.PybatchException as e:
-            ## The remote path should be included in the error message
-            ## but the full message may depend on the language.
+            # The remote path should be included in the error message
+            # but the full message may depend on the language.
             assert remote_test_file in str(e)
         else:
             assert 0
 
-        ## Test create a file in an inaccessible place
+        # Test create a file in an inaccessible place
         try:
             p.create("/no/directory/", "file content")
         except pybatch.PybatchException as e:
-            assert "/no/directory/" in str(e)
+            assert "/no/directory" in str(e)
         else:
             assert 0
 
@@ -72,7 +75,7 @@ def test_protocol_ssh(remote_args: dict[str, typing.Any]) -> None:
         else:
             assert 0
 
-        # upload inexistent file
+        # upload nonexistent file
         try:
             p.upload([local_wrong_path], work_dir)
         except pybatch.PybatchException as e:
@@ -97,12 +100,12 @@ def test_protocol_ssh(remote_args: dict[str, typing.Any]) -> None:
         assert Path(local_test_file_bis).read_text() == file_content
 
         # run
-        command = [ "python3", "-c", """'print("Cool!")'"""]
+        command = ["python3", "-c", 'print("Cool!")']
         res = p.run(command)
         assert res.strip() == "Cool!"
 
         # run error
-        command = [ "python3", "-c", "'exit(1)'"]
+        command = ["python3", "-c", "exit(1)"]
         try:
             res = p.run(command)
         except pybatch.PybatchException as e:
