@@ -18,13 +18,14 @@ import os
 from pathlib import Path
 import sys
 import logging
+import socket
 
 
 def handler(proc, signum, frame):
     proc.terminate()
 
 
-def submit(workdir, command, wall_time):
+def submit(workdir, command, wall_time, ntasks):
     """Launch a command and return immediatly.
 
     The command is launched in workdir.
@@ -43,6 +44,11 @@ def submit(workdir, command, wall_time):
     stdout_log.touch()
     stderr_log.touch()
     manager_log.touch()
+    # generate batch_nodefile.txt
+    if ntasks > 0:
+        nodelist = (socket.gethostname() + "\n") * ntasks
+        nodefile = Path(workdir) / "batch_nodefile.txt"
+        nodefile.write_text(nodelist)
 
     # execute in detached mode
     pid = os.fork()
@@ -153,6 +159,12 @@ def main(args_list=None):
         default=None,
         help="Maximum execution time in seconds.",
     )
+    parser_submit.add_argument(
+        "--ntasks",
+        type=int,
+        default=0,
+        help="If positive, generate batch_nodefile.txt.",
+    )
     parser_submit.add_argument("command", nargs="+", help="Command to submit.")
 
     parser_wait = subparsers.add_parser(
@@ -171,7 +183,7 @@ def main(args_list=None):
 
     args = parser.parse_args(args_list)
     if args.mode == "submit":
-        submit(args.work_dir, args.command, args.wall_time)
+        submit(args.work_dir, args.command, args.wall_time, args.ntasks)
     elif args.mode == "wait":
         wait(args.proc)
     elif args.mode == "state":

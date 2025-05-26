@@ -11,27 +11,29 @@ class LaunchParameters:
 
       * command - full command to run with arguments as a list.
       * work_directory - remote work directory, with path separator at the end.
-      * host - remote host where the job will be launched
+      * host - remote host where the job will be launched.
       * user - user name if needed.
-      * name - name of the job
+      * name - name of the job.
       * nodes - number of required nodes, 0 for undefined.
-      * ntasks - number of required tasks, 0 for undefined
+      * ntasks - number of required tasks, 0 for undefined.
       * exclusive - activate exclusive mode.
       * wall_time - maximum time of the job.
         Acceptable time formats include "minutes", "minutes:seconds",
         "hours:minutes:seconds", "days-hours", "days-hours:minutes" and
         "days-hours:minutes:seconds".
-      * mem_per_node - memory required per node (ex. "32G")
+      * mem_per_node - memory required per node (ex. "32G").
       * mem_per_cpu - minimum memory required per usable allocated CPU.
       * queue - required queue.
-      * partition - required partition
+      * partition - required partition.
       * wckey
       * extra_as_string - extra parameters as a string
-        (ex. "#SBATCH --cpus-per-task=4")
-      * extra_as_list - extra parameters as a list (ex. ["--cpus-per-task=4"])
-      * preprocess - local path of a script to be launched remotely before the
+        (ex. "#SBATCH --cpus-per-task=4").
+      * extra_as_list - extra parameters as a list (ex. ["--cpus-per-task=4"]).
         job.
-      * input_files - list of local files to be copied to remote work_directory
+      * input_files - list of local files to be copied to remote work_directory.
+      * is_posix - Unix like server (True) or Windows server (False).
+      * create_nodefile - create LIBBATCH_NODEFILE which contains the list of
+        allocated nodes.
     """
 
     command: list[str]
@@ -48,9 +50,9 @@ class LaunchParameters:
     wckey: str = ""
     extra_as_string: str = ""
     extra_as_list: list[str] = field(default_factory=list)
-    preprocess: str = ""
     input_files: list[str | Path] = field(default_factory=list)
     is_posix: bool = True
+    create_nodefile: bool = False
 
 
 @dataclass

@@ -49,6 +49,9 @@ class Job(GenericJob):
                 if self.job_params.wall_time:
                     seconds = slurm_time_to_seconds(self.job_params.wall_time)
                     command += ["--wall_time", seconds]
+                if self.job_params.create_nodefile:
+                    if self.job_params.ntasks > 0:
+                        command += ["--ntasks", str(self.job_params.ntasks)]
                 command += self.job_params.command
                 self.jobid = protocol.run(command).strip()
                 int(self.jobid)  # check

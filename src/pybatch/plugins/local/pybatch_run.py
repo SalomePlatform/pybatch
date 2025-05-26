@@ -15,6 +15,7 @@ import signal
 import functools
 from typing import Optional
 from types import FrameType
+import socket
 
 
 def handler(
@@ -38,6 +39,12 @@ def main() -> None:
         wall_time = int(options["wall_time"])
     else:
         wall_time = None
+    if "ntasks" in options:
+        ntasks = int(options["ntasks"])
+        if ntasks > 0:
+            nodelist = (socket.gethostname() + "\n") * ntasks
+            nodefile = Path(work_directory) / "batch_nodefile.txt"
+            nodefile.write_text(nodelist)
     log_path = Path(work_directory) / "logs"
     log_path.mkdir(parents=True, exist_ok=True)
     stdout_log = log_path / "output.log"

@@ -29,10 +29,12 @@ class Job(GenericJob):
     def __init__(self, param: LaunchParameters):
         self.command = param.command
         self.work_directory = param.work_directory
-        self.preprocess = param.preprocess
         self.input_files = param.input_files
         self.wall_time = slurm_time_to_seconds(param.wall_time)
         self.pid = -1  # job not launched
+        self.ntasks = 0
+        if param.create_nodefile:
+            self.ntasks = param.ntasks
         # TODO We could also use ntasks and mem_per_node to set
         # limits using resource module.
 
@@ -103,8 +105,9 @@ class Job(GenericJob):
             "command": self.command,
         }
         if self.wall_time:
-            # TODO convert from slurm formats (mm, mm:ss, h:mm:ss, etc.)
             cfg["wall_time"] = self.wall_time
+        if self.ntasks > 0:
+            cfg["ntasks"] = self.ntasks
         return cfg
 
     def batch_file(self) -> str:

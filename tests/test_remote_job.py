@@ -102,3 +102,16 @@ def test_error(
         remote_plugin, remote_protocol, remote_args, "error", "error.py"
     )
     tests.job_cases.test_error(remote_plugin, protocol, job_params)
+
+
+def test_nodefile(
+    remote_plugin: str, remote_protocol: str, remote_args: dict[str, typing.Any]
+) -> None:
+    job_params, protocol = remote_case_config(
+        remote_plugin,
+        remote_protocol,
+        remote_args,
+        "nodefile",
+        "check_nodefile.py",
+    )
+    tests.job_cases.test_nodefile(remote_plugin, protocol, job_params)

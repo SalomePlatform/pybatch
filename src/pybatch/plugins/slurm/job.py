@@ -208,6 +208,12 @@ class Job(GenericJob):
             batch += f"#SBATCH {extra}\n"
         if self.job_params.extra_as_string:
             batch += self.job_params.extra_as_string
+        if self.job_params.create_nodefile:
+            batch += """
+LIBBATCH_NODEFILE=`pwd`/batch_nodefile.txt
+srun hostname > $LIBBATCH_NODEFILE
+export LIBBATCH_NODEFILE
+"""
         batch += "\n" + " ".join(self.job_params.command) + "\n"
         batch += """EXIT_CODE=$?
 echo $EXIT_CODE > logs/exit_code.log

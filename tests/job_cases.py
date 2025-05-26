@@ -77,3 +77,23 @@ def test_error(
     job.wait()
     state = job.state()
     assert state == "FAILED"
+
+
+def test_nodefile(
+    plugin: str,
+    protocol: pybatch.GenericProtocol,
+    job_params: pybatch.LaunchParameters,
+) -> None:
+    job_params.ntasks = 4
+    job_params.create_nodefile = True
+    job_params.command = ["python3", "check_nodefile.py", "4"]
+    job = pybatch.create_job(plugin, job_params, protocol)
+    job.submit()
+    job.wait()
+    state = job.state()
+    assert state == "FINISHED"
+    resultdir = tempfile.mkdtemp(suffix="_pybatchtest")
+    job.get(["batch_nodefile.txt"], resultdir)
+    result_file = Path(resultdir) / "batch_nodefile.txt"
+    assert result_file.exists()
+    shutil.rmtree(resultdir)
