@@ -3,8 +3,6 @@ from pathlib import Path
 import os
 
 import pybatch
-import pybatch.protocols.paramiko
-import pybatch.protocols.ssh
 import pybatch.tools
 
 import tests.job_cases
@@ -25,6 +23,8 @@ def create_launch_parameters(
 def create_protocol(
     protocol_name: str, config: dict[str, typing.Any]
 ) -> pybatch.GenericProtocol:
+    import pybatch
+
     params = pybatch.ConnexionParameters(config["host"])
     if "user" in config:
         params.user = config["user"]
@@ -33,8 +33,12 @@ def create_protocol(
     if "gss_auth" in config:
         params.gss_auth = config["gss_auth"]
     if protocol_name == "ssh":
+        import pybatch.protocols.ssh
+
         protocol = pybatch.protocols.ssh.SshProtocol(params)
     elif protocol_name == "paramiko":
+        import pybatch.protocols.paramiko
+
         protocol = pybatch.protocols.paramiko.ParamikoProtocol(params)
     else:
         raise Exception(f"Unknown protocol {protocol_name}")

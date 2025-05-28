@@ -1,17 +1,46 @@
 # pybatch
-
-Pybatch is a python module to submit jobs on a remote machine managed by a batch manager such as Slurm, PBS, etc.
-
-# Prerequisites
-
-libkrb5-dev
+Pybatch is a python module to submit jobs on a remote server managed by a batch manager such as Slurm, PBS, etc.
 
 # Install
-
-pkcon install libkrb5-dev
+For the installation, you can download the sources and use python package installers such as 'pip' to install from sources.
+You can download the sources here:
+```
 git clone https://gitlab.pleiade.edf.fr/I35256/pybatch.git
+```
+
+## Basic installation
+This installation uses minmalistic dependencies. The only python package used is 'psutil'.
+```
 pip install pybatch
+```
+In this kind of installation, the only way to connect to a remote server is to use 'SshProtocol' which needs the 'ssh' external command to be already available on the workstation.
+
+## Complete installation
+This installation uses some additional dependencies in order to have a built in 'ssh' client.
+These additional dependencies are :
+- 'libkrb5-dev' linux package needed for kerberos authentication,
+- 'paramiko' and 'scp' python packages.
+
+```
+pkcon install libkrb5-dev
+pip install pybatch[paramiko]
+```
+With this kind of installation you can use 'ParamikoProtocol' for remote connections, which does not use any external program.
 
 # Tests
+Pybatch tests use 'pytest' for execution and 'tox' for the management of the python environment.
+There are three kinds of tests :
+1. tests that can be run on the local workstation without any additional data,
+2. tests that need a remote ssh server,
+3. tests that need 'Slurm', localy or remotely
 
-tox -e test -- --user-config-file=doc/examples/config_tests.toml
+The first category of tests can be executed from the sources directory by the command :
+```
+tox -e test
+```
+The other tests need a configuration file :
+```
+tox -e test -- --user-config-file=path/to/config_tests.toml
+```
+The configuration file defines the adress of the remote server, the type of tests that could be run and some other data needed by the test.
+An example of configuration file is available [here](doc/examples/config_tests.toml).

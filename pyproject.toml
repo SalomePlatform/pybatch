@@ -18,9 +18,7 @@ classifiers = [
 # python 3.9 needed for 'list[str]' syntaxe.
 requires-python = ">=3.9"
 dependencies = [
-    "psutil",
-    "scp",
-    "paramiko[gssapi]"
+    "psutil"
 ]
 version = "0.0"
 
@@ -33,6 +31,10 @@ slurm = "pybatch.plugins.slurm.plugin:Plugin"
 nobatch = "pybatch.plugins.nobatch.plugin:Plugin"
 
 [project.optional-dependencies]
+paramiko = [
+    "scp",
+    "paramiko[gssapi]"
+]
 dev = [
     "tox >= 4.0",
 ]

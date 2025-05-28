@@ -3,13 +3,14 @@ import tempfile
 import os
 import shutil
 from pathlib import Path
-import pybatch
-import pybatch.protocols.paramiko
-from pybatch.tools import path_join
-import scp
 
 
 def test_protocol_paramiko(remote_args: dict[str, typing.Any]) -> None:
+    import pybatch
+    import pybatch.protocols.paramiko
+    from pybatch.tools import path_join
+    import scp
+
     # Test connection to a host that does not exist
     connect_param = pybatch.ConnexionParameters(host="noname_zozo")
     protocol = pybatch.protocols.paramiko.ParamikoProtocol(connect_param)
