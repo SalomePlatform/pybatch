@@ -1,13 +1,13 @@
 from __future__ import annotations
 from collections.abc import Iterable
 from pathlib import Path
-from ..parameter import ConnexionParameters
+from ..parameter import ConnectionParameters
 from ..tools import run_check, escape_str
 from .. import PybatchException
 
 
 class SshProtocol:
-    def __init__(self, params: ConnexionParameters):
+    def __init__(self, params: ConnectionParameters):
         self._host = params.host
         self._user = params.user
         self._password = params.password  # TODO not supported yet
@@ -78,5 +78,5 @@ class SshProtocol:
         return proc.stdout
 
 
-def open(params: ConnexionParameters) -> SshProtocol:
+def open(params: ConnectionParameters) -> SshProtocol:
     return SshProtocol(params)

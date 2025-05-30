@@ -12,7 +12,7 @@ def test_protocol_paramiko(remote_args: dict[str, typing.Any]) -> None:
     import scp
 
     # Test connection to a host that does not exist
-    connect_param = pybatch.ConnexionParameters(host="noname_zozo")
+    connect_param = pybatch.ConnectionParameters(host="noname_zozo")
     protocol = pybatch.protocols.paramiko.ParamikoProtocol(connect_param)
     try:
         protocol.open()
@@ -29,7 +29,7 @@ def test_protocol_paramiko(remote_args: dict[str, typing.Any]) -> None:
     is_posix = True
     if "is_posix" in remote_args:
         is_posix = remote_args["is_posix"]
-    connect_param = pybatch.ConnexionParameters(
+    connect_param = pybatch.ConnectionParameters(
         host=hostname, gss_auth=gss_auth
     )
     protocol = pybatch.protocols.paramiko.ParamikoProtocol(connect_param)

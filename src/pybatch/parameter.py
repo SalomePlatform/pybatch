@@ -56,7 +56,7 @@ class LaunchParameters:
 
 
 @dataclass
-class ConnexionParameters:
+class ConnectionParameters:
     """Parameters needed to connect to a remote server.
 
     List of parameters :

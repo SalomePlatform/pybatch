@@ -3,13 +3,13 @@ from collections.abc import Iterable
 from pathlib import Path
 import paramiko
 import scp  # type: ignore
-from ..parameter import ConnexionParameters
+from ..parameter import ConnectionParameters
 from .. import PybatchException
 from ..tools import escape_str
 
 
 class ParamikoProtocol:
-    def __init__(self, params: ConnexionParameters):
+    def __init__(self, params: ConnectionParameters):
         client = paramiko.client.SSHClient()
         client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -83,5 +83,5 @@ class ParamikoProtocol:
         return str_std
 
 
-def open(params: ConnexionParameters) -> ParamikoProtocol:
+def open(params: ConnectionParameters) -> ParamikoProtocol:
     return ParamikoProtocol(params)

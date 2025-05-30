@@ -25,7 +25,7 @@ def create_protocol(
 ) -> pybatch.GenericProtocol:
     import pybatch
 
-    params = pybatch.ConnexionParameters(config["host"])
+    params = pybatch.ConnectionParameters(config["host"])
     if "user" in config:
         params.user = config["user"]
     if "password" in config:

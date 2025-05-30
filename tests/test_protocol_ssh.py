@@ -10,7 +10,7 @@ from pybatch.tools import path_join
 
 def test_protocol_ssh(remote_args: dict[str, typing.Any]) -> None:
     # Test connection to a host that does not exist
-    connect_param = pybatch.ConnexionParameters(host="noname_zozo")
+    connect_param = pybatch.ConnectionParameters(host="noname_zozo")
     protocol = pybatch.protocols.ssh.SshProtocol(connect_param)
     with protocol as p:
         try:
@@ -33,7 +33,7 @@ def test_protocol_ssh(remote_args: dict[str, typing.Any]) -> None:
     is_posix = True
     if "is_posix" in remote_args:
         is_posix = remote_args["is_posix"]
-    connect_param = pybatch.ConnexionParameters(
+    connect_param = pybatch.ConnectionParameters(
         host=hostname, gss_auth=gss_auth
     )
     protocol = pybatch.protocols.ssh.SshProtocol(connect_param)
