@@ -58,6 +58,11 @@ class ParamikoProtocol:
             with sftp.open(remote_path, "w") as remote_file:
                 remote_file.write(content)
 
+    def read(self, remote_path: str) -> str:
+        with self.client.open_sftp() as sftp:
+            with sftp.open(remote_path, "r") as remote_file:
+                return remote_file.read().decode()
+
     def run(self, command: list[str]) -> str:
         # in case of issues with big stdout|stderr see
         # https://github.com/paramiko/paramiko/issues/563

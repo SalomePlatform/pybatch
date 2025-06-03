@@ -37,7 +37,8 @@ def test_protocol_local() -> None:
         # Test create + download
         file_content = "Servus!"
         p.create(remote_test_file, file_content)
-        assert Path(remote_test_file).read_text() == file_content
+        remote_content = p.read(remote_test_file)
+        assert remote_content == file_content
         p.download([remote_test_file], local_test_file)
         assert Path(local_test_file).read_text() == file_content
 

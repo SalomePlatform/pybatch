@@ -58,6 +58,9 @@ class LocalProtocol:
     def create(self, remote_path: str, content: str) -> None:
         Path(remote_path).write_text(content)
 
+    def read(self, remote_path: str) -> str:
+        return Path(remote_path).read_text()
+
     def run(self, command: list[str]) -> str:
         proc = run_check(command)
         return proc.stdout

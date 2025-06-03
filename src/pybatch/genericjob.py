@@ -1,3 +1,4 @@
+from __future__ import annotations
 import typing
 
 
@@ -21,12 +22,19 @@ class GenericJob(typing.Protocol):
         """
         ...
 
+    def exit_code(self) -> int | None:
+        """Get the exit code of the command if any.
+        If the code is not found, for instance when the job is neither FINISHED
+        nor FAILED, return None.
+        """
+        ...
+
     def cancel(self) -> None:
         "Stop the job."
         ...
 
     def get(self, remote_path: list[str], local_path: str) -> None:
-        """Copy a file from the remote work directory.
+        """Copy files from the remote work directory.
 
         :param remote_paths: paths relative to work directory on remote host.
         :param local_path: destination of the copy on local file system.

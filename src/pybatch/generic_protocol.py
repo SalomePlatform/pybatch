@@ -38,6 +38,10 @@ class GenericProtocol(typing.Protocol):
         "Create a file on the server."
         ...
 
+    def read(self, remote_path: str) -> str:
+        "Get the content of a file."
+        ...
+
     def run(self, command: list[str]) -> str:
         "Run a command on the server."
         ...

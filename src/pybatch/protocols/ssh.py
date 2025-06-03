@@ -63,6 +63,16 @@ class SshProtocol:
         full_command.append(f"cat > '{remote_path}'")
         run_check(full_command, input=content)
 
+    def read(self, remote_path: str) -> str:
+        full_command = ["ssh", self._host]
+        if self._user:
+            full_command += ["-l", self._user]
+        if self._gss_auth:
+            full_command.append("-K")
+        full_command.append(f"cat '{remote_path}'")
+        proc = run_check(full_command)
+        return proc.stdout
+
     def run(self, command: list[str]) -> str:
         if len(command) == 0:
             raise PybatchException("Empty command.")

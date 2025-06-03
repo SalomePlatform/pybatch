@@ -35,6 +35,8 @@ class Job(GenericJob):
                     )
                     command = ["mkdir", "-p", logdir]
                     protocol.run(command)
+                else:
+                    pass  # TODO
 
                 file_dir = Path(os.path.dirname(__file__))
                 manager_script = file_dir / "pybatch_manager.py"
@@ -93,6 +95,20 @@ class Job(GenericJob):
             except Exception as e:
                 message = "Failed to wait job."
                 raise PybatchException(message) from e
+        return result
+
+    def exit_code(self) -> int | None:
+        exit_code_path = path_join(
+            self.job_params.work_directory,
+            "logs",
+            "exit_code.log",
+            is_posix=self.job_params.is_posix,
+        )
+        with self.protocol as protocol:
+            try:
+                result = int(protocol.read(exit_code_path).strip())
+            except Exception:
+                result = None
         return result
 
     def cancel(self) -> None:

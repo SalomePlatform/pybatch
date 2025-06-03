@@ -81,6 +81,17 @@ class Job(GenericJob):
             else:
                 return "FAILED"
 
+    def exit_code(self) -> int | None:
+        exit_log = Path(self.work_directory) / "logs" / "exit_code.log"
+        result = None
+        try:
+            if exit_log.is_file():
+                exit_value = exit_log.read_text().strip()
+                result = int(exit_value)
+        except Exception:
+            result = None
+        return result
+
     def cancel(self) -> None:
         "Stop the job."
         pu = psutil.Process(self.pid)

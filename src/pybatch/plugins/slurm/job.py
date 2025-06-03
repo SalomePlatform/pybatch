@@ -147,6 +147,20 @@ class Job(GenericJob):
                 f"Unknown state. squeue_state: {squeue_state}, sacct_state:{sacct_state}"
             )
 
+    def exit_code(self) -> int | None:
+        exit_code_path = path_join(
+            self.job_params.work_directory,
+            "logs",
+            "exit_code.log",
+            is_posix=self.job_params.is_posix,
+        )
+        with self.protocol as protocol:
+            try:
+                result = int(protocol.read(exit_code_path).strip())
+            except Exception:
+                result = None
+        return result
+
     def cancel(self) -> None:
         "Stop the job."
         if not self.jobid:
