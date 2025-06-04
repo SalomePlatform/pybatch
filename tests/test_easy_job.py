@@ -2,6 +2,7 @@ import tempfile
 from pathlib import Path
 import os
 import shutil
+import time
 
 
 def test_python_script(job_plugin):
@@ -28,6 +29,22 @@ def test_python_script(job_plugin):
     exit_code = Path(workdir) / "logs" / "exit_code.log"
     assert exit_code.read_text() == "0"
     shutil.rmtree(workdir)
+
+
+def test_finish_without_wait(job_plugin):
+    "Test that a job can finish without using job.wait()."
+    import pybatch
+
+    workdir = tempfile.mkdtemp(suffix="_pybatchtest")
+    current_file_dir = os.path.dirname(__file__)
+    script = Path(current_file_dir) / "scripts" / "hello.py"
+    params = pybatch.LaunchParameters(
+        ["python3", "hello.py", "world"], workdir, input_files=[script]
+    )
+    job = pybatch.create_job(job_plugin, params)
+    job.submit()
+    time.sleep(1)  # instead of job.wait()
+    assert job.state() == "FINISHED"
 
 
 def test_error_script(job_plugin):

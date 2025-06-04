@@ -1,5 +1,7 @@
 from __future__ import annotations
 import typing
+from typing import Optional
+from types import FrameType
 
 from ... import GenericJob, LaunchParameters, PybatchException
 from ...tools import slurm_time_to_seconds
@@ -9,6 +11,15 @@ import subprocess
 import psutil
 import json
 import os
+import signal
+import socket
+import functools
+
+
+def handler(
+    proc: subprocess.Popen[bytes], signum: int, frame: Optional[FrameType]
+) -> None:
+    proc.terminate()
 
 
 def copy(src: str | Path, dest: str | Path) -> None:
@@ -30,7 +41,11 @@ class Job(GenericJob):
         self.command = param.command
         self.work_directory = param.work_directory
         self.input_files = param.input_files
-        self.wall_time = slurm_time_to_seconds(param.wall_time)
+        seconds_str = slurm_time_to_seconds(param.wall_time)
+        if not seconds_str:
+            self.wall_time = None
+        else:
+            self.wall_time = int(seconds_str)
         self.pid = -1  # job not launched
         self.ntasks = 0
         if param.create_nodefile:
@@ -41,17 +56,29 @@ class Job(GenericJob):
     def submit(self) -> None:
         """Submit the job to the batch manager and return.
 
-        If the submission fails, raise an exception.
+        The command is executed in a process detached from the current one, in
+        a daemon mode.
         """
-        Path(self.work_directory).mkdir(parents=True, exist_ok=True)
-        for fi in self.input_files:
-            copy(fi, self.work_directory)
-        config = self.config()
-        config_path = Path(self.work_directory) / "pybatch_conf.json"
-        with open(config_path, "w") as config_file:
-            json.dump(config, config_file)
-        proc = subprocess.Popen(["pybatch_run", config_path])
-        self.pid = proc.pid
+        self._prepare_run()
+        r_pipe, w_pipe = os.pipe()
+        pid = os.fork()
+        if pid > 0:
+            # father side - get pid of the grand child
+            self.pid = int(os.fdopen(r_pipe).readline().strip())
+            return
+        # double fork for daemon creation
+        try:
+            pid = os.fork()
+            if pid > 0:
+                # child side
+                try:
+                    os.write(w_pipe, f"{pid}\n".encode())
+                finally:
+                    os._exit(0)  # ensure child ends here!
+            # actual daemon
+            self._run()
+        finally:
+            os._exit(0)  # ensure grand child ends here!
 
     def wait(self) -> None:
         "Wait until the end of the job."
@@ -124,6 +151,45 @@ class Job(GenericJob):
     def batch_file(self) -> str:
         "Get the content of the batch file submited to the batch manager."
         return json.dumps(self.config())
+
+    def _prepare_run(self) -> None:
+        Path(self.work_directory).mkdir(parents=True, exist_ok=True)
+        for fi in self.input_files:
+            copy(fi, self.work_directory)
+        if self.ntasks > 0:
+            nodelist = (socket.gethostname() + "\n") * self.ntasks
+            nodefile = Path(self.work_directory) / "batch_nodefile.txt"
+            nodefile.write_text(nodelist)
+        log_path = Path(self.work_directory) / "logs"
+        log_path.mkdir(parents=True, exist_ok=True)
+
+    def _run(self) -> None:
+        # daemonize process
+        os.setsid()
+        signal.signal(signal.SIGHUP, signal.SIG_IGN)
+
+        log_path = Path(self.work_directory) / "logs"
+        stdout_log = log_path / "output.log"
+        stderr_log = log_path / "error.log"
+        # file descriptors are automaticaly closed by default
+        # (see close_fds argument of Popen).
+        stdout_file = open(stdout_log, "w")
+        stderr_file = open(stderr_log, "w")
+        proc = subprocess.Popen(
+            self.command,
+            cwd=self.work_directory,
+            stdout=stdout_file,
+            stderr=stderr_file,
+        )
+        signal.signal(signal.SIGTERM, functools.partial(handler, proc))
+        try:
+            exit_code = proc.wait(self.wall_time)
+        except subprocess.TimeoutExpired:
+            proc.terminate()
+            exit_code = proc.wait()
+        exit_log = log_path / "exit_code.log"
+        with open(exit_log, "w") as exit_file:
+            exit_file.write(str(exit_code))
 
     # A réfléchir, mais il vaut peut-être mieux utiliser la sérialisation
     # pickle.
