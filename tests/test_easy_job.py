@@ -45,6 +45,7 @@ def test_finish_without_wait(job_plugin):
     job.submit()
     time.sleep(1)  # instead of job.wait()
     assert job.state() == "FINISHED"
+    shutil.rmtree(workdir)
 
 
 def test_error_script(job_plugin):
