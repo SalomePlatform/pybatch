@@ -97,3 +97,27 @@ def test_nodefile(
     result_file = Path(resultdir) / "batch_nodefile.txt"
     assert result_file.exists()
     shutil.rmtree(resultdir)
+
+
+def test_reconnect(
+    plugin: str,
+    protocol: pybatch.GenericProtocol,
+    job_params: pybatch.LaunchParameters,
+) -> None:
+    job_params.command = ["python3", "sleep.py", "10"]
+    job = pybatch.create_job(plugin, job_params, protocol)
+    job.submit()
+    import pickle
+
+    dumps = pickle.dumps(job)
+    new_job = pickle.loads(dumps)
+    state = new_job.state()
+    assert state in ["RUNNING", "QUEUED"]
+    new_job.wait()
+    state = new_job.state()
+    assert state == "FINISHED"
+    resultdir = tempfile.mkdtemp(suffix="_pybatchtest")
+    new_job.get(["wakeup.txt"], resultdir)
+    result_file = Path(resultdir) / "wakeup.txt"
+    assert result_file.exists()
+    shutil.rmtree(resultdir)

@@ -3,6 +3,7 @@ from collections.abc import Iterable
 from pathlib import Path
 import paramiko
 import scp  # type: ignore
+from typing import Any
 from ..parameter import ConnectionParameters
 from .. import PybatchException
 from ..tools import escape_str
@@ -86,6 +87,20 @@ class ParamikoProtocol:
 """
             raise PybatchException(message)
         return str_std
+
+    def __getstate__(self) -> dict[str, Any]:
+        # deal with paramiko.client which is not suppported by pickle
+        state = self.__dict__.copy()
+        # Remove the unpicklable entries.
+        del state["client"]
+        return state
+
+    def __setstate__(self, state: Any) -> None:
+        self.__dict__.update(state)
+        client = paramiko.client.SSHClient()
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.client = client
 
 
 def open(params: ConnectionParameters) -> ParamikoProtocol:
