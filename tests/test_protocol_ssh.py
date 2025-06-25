@@ -115,4 +115,10 @@ def test_protocol_ssh(remote_args: dict[str, typing.Any]) -> None:
         else:
             assert 0
 
+        # remove remote files
+        pycommand = f'import os; os.remove("{remote_test_file}")'
+        p.run(["python3", "-c", pycommand])
+        pycommand = f'import os; os.remove("{remote_test_file_bis}")'
+        p.run(["python3", "-c", pycommand])
+
     shutil.rmtree(local_work_dir)

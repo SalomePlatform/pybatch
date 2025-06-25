@@ -12,10 +12,10 @@ import tests.job_cases
 
 
 def local_case_config(
-    plugin, config: dict[str, typing.Any], case_name: str, script_name: str
+    plugin: str, config: dict[str, typing.Any], case_name: str, script_name: str
 ) -> tuple[pybatch.LaunchParameters, pybatch.GenericProtocol, str]:
     if "work_dir" in config:
-        work_dir = os.path.join(config["work_dir"], case_name, plugin)
+        work_dir = os.path.join(config["work_dir"], case_name + "_" + plugin)
     else:
         work_dir = tempfile.mkdtemp(suffix="_pybatchtest")
     params = pybatch.LaunchParameters([], work_dir)
