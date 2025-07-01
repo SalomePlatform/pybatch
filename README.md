@@ -44,3 +44,7 @@ tox -e test -- --user-config-file=path/to/config_tests.toml
 ```
 The configuration file defines the adress of the remote server, the type of tests that could be run and some other data needed by the test.
 An example of configuration file is available [here](doc/examples/config_tests.toml).
+
+# Exemple of use
+
+[Use case with comments.](doc/examples/use_case.py)

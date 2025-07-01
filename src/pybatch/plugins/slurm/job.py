@@ -114,12 +114,17 @@ class Job(GenericJob):
         try:
             with self.protocol as protocol:
                 # First try to query the job with "squeue" command
-                command = ["squeue", "-h", "-o", "%T", "-j", self.jobid]
-                squeue_state = protocol.run(command)
-                if squeue_state:
-                    state = simplified_state(squeue_state)
-                    if state:
-                        return state
+                try:
+                    command = ["squeue", "-h", "-o", "%T", "-j", self.jobid]
+                    squeue_state = protocol.run(command)
+                    if squeue_state:
+                        state = simplified_state(squeue_state)
+                        if state:
+                            return state
+                except PybatchException:
+                    # job was finished a long time ago and it is no longer
+                    # available for squeue
+                    pass
 
                 # If "squeue" failed, the job may be finished.
                 # In this case, try to query the job with "sacct".
