@@ -26,8 +26,7 @@ def test_python_script(job_plugin):
     assert output_file.read_text() == "Hello world !\n"
     error_file = Path(workdir) / "logs" / "error.log"
     assert not error_file.read_text()  # empty file expected
-    exit_code = Path(workdir) / "logs" / "exit_code.log"
-    assert exit_code.read_text() == "0"
+    assert job.exit_code() == 0
     shutil.rmtree(workdir)
 
 
@@ -69,8 +68,7 @@ def test_error_script(job_plugin):
     assert output_file.read_text() == "Problems comming...\n"
     error_file = Path(workdir) / "logs" / "error.log"
     assert "Oups!" in error_file.read_text()
-    exit_code = Path(workdir) / "logs" / "exit_code.log"
-    assert exit_code.read_text() == "1"
+    assert job.exit_code() == 1
     shutil.rmtree(workdir)
 
 
@@ -90,8 +88,7 @@ def test_state(job_plugin):
     assert job.state() == "RUNNING"
     job.wait()
     assert job.state() == "FINISHED"
-    exit_code = Path(workdir) / "logs" / "exit_code.log"
-    assert exit_code.read_text() == "0"
+    assert job.exit_code() == 0
     assert (Path(workdir) / "wakeup.txt").exists()
     shutil.rmtree(workdir)
 
@@ -115,9 +112,7 @@ def test_cancel(job_plugin):
     job.wait()
     time.sleep(2)  # sleep.py would have had the time to finish if not canceled.
     assert not (Path(workdir) / "wakeup.txt").exists()
-    exit_code = Path(workdir) / "logs" / "exit_code.log"
-    # assert not exit_code.exists() or exit_code.read_text() != "0"
-    assert exit_code.read_text() == "-15"  # not sure for Windows
+    assert job.exit_code() == -15 # not sure for Windows
     shutil.rmtree(workdir)
 
 
@@ -159,9 +154,7 @@ def test_wall_time(job_plugin):
     job.submit()
     job.wait()
     assert not (Path(workdir) / "wakeup.txt").exists()
-    exit_code = Path(workdir) / "logs" / "exit_code.log"
-    # assert not exit_code.exists() or exit_code.read_text() != "0"
-    assert exit_code.read_text() == "-15"  # not sure for Windows
+    assert job.exit_code() == -15 # not sure for Windows
     shutil.rmtree(workdir)
 
 
@@ -185,8 +178,7 @@ def test_files_and_directories(job_plugin):
     job.wait()
     error_file = Path(workdir) / "logs" / "error.log"
     assert not error_file.read_text()  # empty file expected
-    exit_code = Path(workdir) / "logs" / "exit_code.log"
-    assert exit_code.read_text() == "0"
+    assert job.exit_code() == 0
     job.get(["output.txt"], resultdir)
     assert (Path(resultdir) / "output.txt").read_text() == "51"
     job.get(["data"], resultdir)

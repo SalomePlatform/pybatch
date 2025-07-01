@@ -6,7 +6,7 @@ from pybatch import GenericJob, GenericProtocol, LaunchParameters
 from pybatch import PybatchException
 from pybatch.protocols.local import LocalProtocol
 
-from pybatch.tools import path_join, is_absolute
+from pybatch.tools import path_join, is_absolute, escape_str
 
 
 def simplified_state(name: str) -> str:
@@ -125,11 +125,11 @@ class Job(GenericJob):
                 # In this case, try to query the job with "sacct".
                 command = [
                     "sacct",
-                    "-X",
-                    "-o",
-                    "State%-10",
-                    "-n",
-                    "-j",
+                    "-X",         # ignore steps
+                    "-o",         # output fileds
+                    "State%-10",  # state field on less than 10 chars
+                    "-n",         # no header
+                    "-j",         # jobid
                     self.jobid,
                 ]
                 sacct_state = protocol.run(command)
@@ -148,15 +148,21 @@ class Job(GenericJob):
             )
 
     def exit_code(self) -> int | None:
-        exit_code_path = path_join(
-            self.job_params.work_directory,
-            "logs",
-            "exit_code.log",
-            is_posix=self.job_params.is_posix,
-        )
+        if not self.jobid:
+            return None
         with self.protocol as protocol:
             try:
-                result = int(protocol.read(exit_code_path).strip())
+                command = [
+                    "sacct",
+                    "-X",         # ignore steps
+                    "-o",         # output fileds
+                    "ExitCode%-10",
+                    "-n",         # no header
+                    "-j",         # jobid
+                    self.jobid,
+                ]
+                code_str = protocol.run(command) # format 0:0
+                result = int(code_str.split(":")[0])
             except Exception:
                 result = None
         return result
@@ -228,11 +234,12 @@ LIBBATCH_NODEFILE=`pwd`/batch_nodefile.txt
 srun hostname > $LIBBATCH_NODEFILE
 export LIBBATCH_NODEFILE
 """
-        batch += "\n" + " ".join(self.job_params.command) + "\n"
-        batch += """EXIT_CODE=$?
-echo $EXIT_CODE > logs/exit_code.log
-exit $EXIT_CODE
-"""
+        command = self.job_params.command
+        str_command = command[0]
+        for arg in command[1:]:
+            str_command += " " + escape_str(arg)
+        batch += "\n"
+        batch += str_command
         return batch
 
     # A réfléchir, mais il vaut peut-être mieux utiliser la sérialisation
