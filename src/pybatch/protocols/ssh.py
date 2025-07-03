@@ -13,20 +13,6 @@ class SshProtocol:
         self._password = params.password  # TODO not supported yet
         self._gss_auth = params.gss_auth
 
-    def __enter__(self):  # type: ignore
-        return self
-
-    def __exit__(self, _type, _value, _traceback):  # type: ignore
-        pass
-
-    def open(self) -> None:
-        "Open session."
-        pass
-
-    def close(self) -> None:
-        "Close session."
-        pass
-
     def upload(
         self, local_entries: Iterable[str | Path], remote_path: str
     ) -> None:

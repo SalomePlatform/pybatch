@@ -73,8 +73,7 @@ def remote_case_config(
 
 def clean(protocol: pybatch.GenericProtocol, remote_dir: str) -> None:
     pycommand = f'import shutil; shutil.rmtree("{remote_dir}")'
-    with protocol as session:
-        session.run(["python3", "-c", pycommand])
+    protocol.run(["python3", "-c", pycommand])
 
 
 def test_hello(

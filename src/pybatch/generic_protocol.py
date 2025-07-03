@@ -7,21 +7,6 @@ from pathlib import Path
 class GenericProtocol(typing.Protocol):
     "Connection protocol (ssh, local, ...)."
 
-    def __enter__(self):  # type: ignore
-        "Implement context manager pattern."
-        ...
-
-    def __exit__(self, _type, _value, _traceback):  # type: ignore
-        ...
-
-    def open(self) -> None:
-        "Open session."
-        ...
-
-    def close(self) -> None:
-        "Close session."
-        ...
-
     def upload(
         self, local_entries: Iterable[str | Path], remote_path: str
     ) -> None:

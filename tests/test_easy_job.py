@@ -112,7 +112,7 @@ def test_cancel(job_plugin):
     job.wait()
     time.sleep(2)  # sleep.py would have had the time to finish if not canceled.
     assert not (Path(workdir) / "wakeup.txt").exists()
-    assert job.exit_code() == -15 # not sure for Windows
+    assert job.exit_code() == -15  # not sure for Windows
     shutil.rmtree(workdir)
 
 
@@ -154,7 +154,7 @@ def test_wall_time(job_plugin):
     job.submit()
     job.wait()
     assert not (Path(workdir) / "wakeup.txt").exists()
-    assert job.exit_code() == -15 # not sure for Windows
+    assert job.exit_code() == -15  # not sure for Windows
     shutil.rmtree(workdir)
 
 

@@ -16,15 +16,12 @@ class ParamikoProtocol:
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.client = client
         self.params = params
+        self._open()
 
-    def __enter__(self):  # type: ignore
-        self.open()
-        return self
+    def __del__(self) -> None:
+        self.client.close()
 
-    def __exit__(self, type, value, traceback):  # type: ignore
-        self.close()
-
-    def open(self) -> None:
+    def _open(self) -> None:
         try:
             self.client.connect(
                 self.params.host,
@@ -35,10 +32,6 @@ class ParamikoProtocol:
         except Exception as e:
             message = f"Failed to open ssh connection to {self.params.host}."
             raise PybatchException(message) from e
-
-    def close(self) -> None:
-        "Close session."
-        self.client.close()
 
     def upload(
         self, local_entries: Iterable[str | Path], remote_path: str
@@ -101,6 +94,7 @@ class ParamikoProtocol:
         client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.client = client
+        self._open()
 
 
 def open(params: ConnectionParameters) -> ParamikoProtocol:

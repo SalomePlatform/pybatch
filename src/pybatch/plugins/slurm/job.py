@@ -64,37 +64,37 @@ class Job(GenericJob):
 
         If the submission fails, raise an exception.
         """
-        with self.protocol as protocol:
-            try:
-                # create remote workdir
-                # workdir is always a linux path
-                logdir = path_join(
-                    self.job_params.work_directory, "logs", is_posix=True
-                )
-                command = ["mkdir", "-p", logdir]
-                protocol.run(command)
+        # with self.protocol as protocol:
+        try:
+            # create remote workdir
+            # workdir is always a linux path
+            logdir = path_join(
+                self.job_params.work_directory, "logs", is_posix=True
+            )
+            command = ["mkdir", "-p", logdir]
+            self.protocol.run(command)
 
-                batch_path = path_join(
-                    self.job_params.work_directory, "batch.cmd", is_posix=True
-                )
-                protocol.create(batch_path, self.batch_file())
-                protocol.upload(
-                    self.job_params.input_files, self.job_params.work_directory
-                )
-                output = protocol.run(
-                    [
-                        "sbatch",
-                        "--parsable",
-                        "--chdir",
-                        self.job_params.work_directory,
-                        batch_path,
-                    ]
-                )
-                self.jobid = output.split(";")[0].strip()
-                int(self.jobid)  # check
-            except Exception as e:
-                message = "Failed to submit job."
-                raise PybatchException(message) from e
+            batch_path = path_join(
+                self.job_params.work_directory, "batch.cmd", is_posix=True
+            )
+            self.protocol.create(batch_path, self.batch_file())
+            self.protocol.upload(
+                self.job_params.input_files, self.job_params.work_directory
+            )
+            output = self.protocol.run(
+                [
+                    "sbatch",
+                    "--parsable",
+                    "--chdir",
+                    self.job_params.work_directory,
+                    batch_path,
+                ]
+            )
+            self.jobid = output.split(";")[0].strip()
+            int(self.jobid)  # check
+        except Exception as e:
+            message = "Failed to submit job."
+            raise PybatchException(message) from e
 
     def wait(self) -> None:
         "Wait until the end of the job."
@@ -112,37 +112,37 @@ class Job(GenericJob):
         if not self.jobid:
             return "CREATED"
         try:
-            with self.protocol as protocol:
-                # First try to query the job with "squeue" command
-                try:
-                    command = ["squeue", "-h", "-o", "%T", "-j", self.jobid]
-                    squeue_state = protocol.run(command)
-                    if squeue_state:
-                        state = simplified_state(squeue_state)
-                        if state:
-                            return state
-                except PybatchException:
-                    # job was finished a long time ago and it is no longer
-                    # available for squeue
-                    pass
+            # with self.protocol as protocol:
+            # First try to query the job with "squeue" command
+            try:
+                command = ["squeue", "-h", "-o", "%T", "-j", self.jobid]
+                squeue_state = self.protocol.run(command)
+                if squeue_state:
+                    state = simplified_state(squeue_state)
+                    if state:
+                        return state
+            except PybatchException:
+                # job was finished a long time ago and it is no longer
+                # available for squeue
+                pass
 
-                # If "squeue" failed, the job may be finished.
-                # In this case, try to query the job with "sacct".
-                command = [
-                    "sacct",
-                    "-X",         # ignore steps
-                    "-o",         # output fileds
-                    "State%-10",  # state field on less than 10 chars
-                    "-n",         # no header
-                    "-j",         # jobid
-                    self.jobid,
-                ]
-                sacct_state = protocol.run(command)
-                if not sacct_state:
-                    # Give some time to slurm scheduler to update
-                    time.sleep(1)
-                    sacct_state = protocol.run(command)
-                state = simplified_state(sacct_state)
+            # If "squeue" failed, the job may be finished.
+            # In this case, try to query the job with "sacct".
+            command = [
+                "sacct",
+                "-X",  # ignore steps
+                "-o",  # output fileds
+                "State%-10",  # state field on less than 10 chars
+                "-n",  # no header
+                "-j",  # jobid
+                self.jobid,
+            ]
+            sacct_state = self.protocol.run(command)
+            if not sacct_state:
+                # Give some time to slurm scheduler to update
+                time.sleep(1)
+                sacct_state = self.protocol.run(command)
+            state = simplified_state(sacct_state)
         except Exception as e:
             raise PybatchException("Failed to get the state of the job.") from e
         if state:
@@ -155,21 +155,20 @@ class Job(GenericJob):
     def exit_code(self) -> int | None:
         if not self.jobid:
             return None
-        with self.protocol as protocol:
-            try:
-                command = [
-                    "sacct",
-                    "-X",         # ignore steps
-                    "-o",         # output fileds
-                    "ExitCode%-10",
-                    "-n",         # no header
-                    "-j",         # jobid
-                    self.jobid,
-                ]
-                code_str = protocol.run(command) # format 0:0
-                result = int(code_str.split(":")[0])
-            except Exception:
-                result = None
+        try:
+            command = [
+                "sacct",
+                "-X",  # ignore steps
+                "-o",  # output fileds
+                "ExitCode%-10",
+                "-n",  # no header
+                "-j",  # jobid
+                self.jobid,
+            ]
+            code_str = self.protocol.run(command)  # format 0:0
+            result = int(code_str.split(":")[0])
+        except Exception:
+            result = None
         return result
 
     def cancel(self) -> None:
@@ -178,8 +177,7 @@ class Job(GenericJob):
             return
         command = ["scancel", self.jobid]
         try:
-            with self.protocol as protocol:
-                protocol.run(command)
+            self.protocol.run(command)
         except Exception as e:
             raise PybatchException("Failed to cancel the job.") from e
 
@@ -189,19 +187,18 @@ class Job(GenericJob):
         :param remote_paths: paths relative to work directory on remote host.
         :param local_path: destination of the copy on local file system.
         """
-        with self.protocol as protocol:
-            checked_paths = []
-            for path in remote_paths:
-                if is_absolute(path, self.job_params.is_posix):
-                    checked_paths.append(path)
-                else:
-                    p = path_join(
-                        self.job_params.work_directory,
-                        path,
-                        is_posix=self.job_params.is_posix,
-                    )
-                    checked_paths.append(p)
-            protocol.download(checked_paths, local_path)
+        checked_paths = []
+        for path in remote_paths:
+            if is_absolute(path, self.job_params.is_posix):
+                checked_paths.append(path)
+            else:
+                p = path_join(
+                    self.job_params.work_directory,
+                    path,
+                    is_posix=self.job_params.is_posix,
+                )
+                checked_paths.append(p)
+        self.protocol.download(checked_paths, local_path)
 
     def batch_file(self) -> str:
         "Get the content of the batch file submited to the batch manager."
