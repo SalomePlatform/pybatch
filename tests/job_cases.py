@@ -121,3 +121,61 @@ def test_reconnect(
     result_file = Path(resultdir) / "wakeup.txt"
     assert result_file.exists()
     shutil.rmtree(resultdir)
+
+
+def test_array(
+    plugin: str,
+    protocol: pybatch.GenericProtocol,
+    job_params: pybatch.LaunchParameters,
+) -> None:
+    job_params.command = ["python3", "array.py"]
+    job_params.total_jobs = 6
+    job_params.max_simul_jobs = 2
+    job = pybatch.create_job(plugin, job_params, protocol)
+    job.submit()
+    state = job.state()
+    assert state in ["RUNNING", "QUEUED"]
+    exit_code = job.exit_code()
+    assert exit_code is None
+    job.wait()
+    state = job.state()
+    assert state == "FINISHED"
+    exit_code = job.exit_code()
+    assert exit_code == 0
+    resultdir = tempfile.mkdtemp(suffix="_pybatchtest")
+    result_files = [f"result_{i}.txt" for i in range(job_params.total_jobs)]
+    job.get(result_files, resultdir)
+    for i in range(job_params.total_jobs):
+        r_name = f"result_{i}.txt"
+        r_file = Path(resultdir) / r_name
+        assert r_file.read_text() == str(i)
+    shutil.rmtree(resultdir)
+
+
+def test_array_ko(
+    plugin: str,
+    protocol: pybatch.GenericProtocol,
+    job_params: pybatch.LaunchParameters,
+) -> None:
+    job_params.command = ["python3", "array_ko.py"]
+    job_params.total_jobs = 6
+    job_params.max_simul_jobs = 2
+    job = pybatch.create_job(plugin, job_params, protocol)
+    job.submit()
+    state = job.state()
+    assert state in ["RUNNING", "QUEUED"]
+    exit_code = job.exit_code()
+    assert exit_code is None
+    job.wait()
+    state = job.state()
+    assert state == "FAILED"
+    exit_code = job.exit_code()
+    assert exit_code == 42
+    resultdir = tempfile.mkdtemp(suffix="_pybatchtest")
+    result_files = [f"result_{i}.txt" for i in range(job_params.total_jobs)]
+    job.get(result_files, resultdir)
+    for i in range(job_params.total_jobs):
+        r_name = f"result_{i}.txt"
+        r_file = Path(resultdir) / r_name
+        assert r_file.read_text() == str(i)
+    shutil.rmtree(resultdir)

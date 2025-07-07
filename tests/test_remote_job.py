@@ -138,3 +138,23 @@ def test_reconnect(
     )
     tests.job_cases.test_reconnect(remote_plugin, protocol, job_params)
     clean(protocol, job_params.work_directory)
+
+
+def test_array(
+    remote_plugin: str, remote_protocol: str, remote_args: dict[str, typing.Any]
+) -> None:
+    job_params, protocol = remote_case_config(
+        remote_plugin, remote_protocol, remote_args, "array", "array.py"
+    )
+    tests.job_cases.test_array(remote_plugin, protocol, job_params)
+    clean(protocol, job_params.work_directory)
+
+
+def test_array_ko(
+    remote_plugin: str, remote_protocol: str, remote_args: dict[str, typing.Any]
+) -> None:
+    job_params, protocol = remote_case_config(
+        remote_plugin, remote_protocol, remote_args, "array_ko", "array_ko.py"
+    )
+    tests.job_cases.test_array_ko(remote_plugin, protocol, job_params)
+    clean(protocol, job_params.work_directory)

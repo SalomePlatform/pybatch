@@ -47,6 +47,30 @@ def simplified_state(name: str) -> str:
     return ""
 
 
+def reduce_states(states_list: list[str], max_number_of_states: int) -> str:
+    simple_states = [simplified_state(s) for s in states_list]
+    if "RUNNING" in simple_states:
+        return "RUNNING"  # at least one is running
+    if "QUEUED" in simple_states:
+        return "QUEUED"  # at least one is queued and none is running
+    if "PAUSED" in simple_states:
+        return "PAUSED"
+    if max_number_of_states == len(states_list):
+        # if all the jobs are listed by squeue (not always the case!)
+        if "FAILED" in simple_states:
+            return "FAILED"
+        # At this point, all the states should be
+        # FINISHED or ""
+        all_finished = True
+        for st in simple_states:
+            if st != "FINISHED":
+                all_finished = False
+                break
+        if all_finished:
+            return "FINISHED"
+    return ""
+
+
 class Job(GenericJob):
     def __init__(
         self, param: LaunchParameters, protocol: GenericProtocol | None
@@ -58,6 +82,7 @@ class Job(GenericJob):
         else:
             self.protocol = protocol
         self.jobid = ""
+        self.number_of_jobs = self.job_params.total_jobs
 
     def submit(self) -> None:
         """Submit the job to the batch manager and return.
@@ -92,6 +117,7 @@ class Job(GenericJob):
             )
             self.jobid = output.split(";")[0].strip()
             int(self.jobid)  # check
+            self.number_of_jobs = self.job_params.total_jobs
         except Exception as e:
             message = "Failed to submit job."
             raise PybatchException(message) from e
@@ -118,9 +144,14 @@ class Job(GenericJob):
                 command = ["squeue", "-h", "-o", "%T", "-j", self.jobid]
                 squeue_state = self.protocol.run(command)
                 if squeue_state:
-                    state = simplified_state(squeue_state)
-                    if state:
-                        return state
+                    st = ""
+                    if self.number_of_jobs > 1:
+                        list_states = squeue_state.splitlines()
+                        st = reduce_states(list_states, self.number_of_jobs)
+                    else:
+                        st = simplified_state(squeue_state)
+                    if st:
+                        return st
             except PybatchException:
                 # job was finished a long time ago and it is no longer
                 # available for squeue
@@ -131,22 +162,34 @@ class Job(GenericJob):
             command = [
                 "sacct",
                 "-X",  # ignore steps
-                "-o",  # output fileds
+                "-o",  # output fields
                 "State%-10",  # state field on less than 10 chars
                 "-n",  # no header
                 "-j",  # jobid
                 self.jobid,
             ]
             sacct_state = self.protocol.run(command)
-            if not sacct_state:
+            max_tries = 5
+            while not sacct_state and max_tries:
+                # if not sacct_state:
                 # Give some time to slurm scheduler to update
+                max_tries -= 1
                 time.sleep(1)
                 sacct_state = self.protocol.run(command)
-            state = simplified_state(sacct_state)
+            st = ""
+            if self.number_of_jobs > 1:
+                list_states = sacct_state.splitlines()
+                st = reduce_states(list_states, self.number_of_jobs)
+                # There are cases where some jobs are finished but remaining
+                # jobs have not been queued yet.
+                if not st and len(list_states) < self.number_of_jobs:
+                    st = "RUNNING"
+            else:
+                st = simplified_state(sacct_state)
         except Exception as e:
             raise PybatchException("Failed to get the state of the job.") from e
-        if state:
-            return state
+        if st:
+            return st
         else:
             raise PybatchException(
                 f"Unknown state. squeue_state: {squeue_state}, sacct_state:{sacct_state}"
@@ -159,14 +202,27 @@ class Job(GenericJob):
             command = [
                 "sacct",
                 "-X",  # ignore steps
-                "-o",  # output fileds
+                "-o",  # output fields
                 "ExitCode%-10",
                 "-n",  # no header
                 "-j",  # jobid
                 self.jobid,
             ]
             code_str = self.protocol.run(command)  # format 0:0
-            result = int(code_str.split(":")[0])
+            if self.number_of_jobs > 1:
+                list_codes = code_str.splitlines()
+                if len(list_codes) < self.number_of_jobs:
+                    result = None
+                else:
+                    list_results = [int(v.split(":")[0]) for v in list_codes]
+                    # get the first non zero exit code
+                    result = 0
+                    for x in list_results:
+                        if x != 0:
+                            result = x
+                            break
+            else:
+                result = int(code_str.split(":")[0])
         except Exception:
             result = None
         return result
@@ -208,6 +264,12 @@ class Job(GenericJob):
 """
         if self.job_params.name:
             batch += f"#SBATCH --job-name={self.job_params.name}\n"
+        if self.job_params.total_jobs > 1:
+            simul = ""
+            if self.job_params.max_simul_jobs > 1:
+                simul = f"%{self.job_params.max_simul_jobs}"
+            array = f"0-{self.job_params.total_jobs - 1}{simul}"
+            batch += f"#SBATCH --array={array}\n"
         if self.job_params.ntasks > 0:
             batch += f"#SBATCH --ntasks={self.job_params.ntasks}\n"
         if self.job_params.nodes > 0:
@@ -240,6 +302,8 @@ export LIBBATCH_NODEFILE
         str_command = command[0]
         for arg in command[1:]:
             str_command += " " + escape_str(arg)
+        if self.job_params.total_jobs > 1:
+            str_command += " $SLURM_ARRAY_TASK_ID"
         batch += "\n"
         batch += str_command
         return batch

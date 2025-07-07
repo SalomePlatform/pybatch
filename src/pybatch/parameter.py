@@ -14,6 +14,8 @@ class LaunchParameters:
       * host - remote host where the job will be launched.
       * user - user name if needed.
       * name - name of the job.
+      * total_jobs - total number of jobs using a job array.
+      * max_simul_jobs - maximum number of simultaneous jobs using a job array.
       * nodes - number of required nodes, 0 for undefined.
       * ntasks - number of required tasks, 0 for undefined.
       * exclusive - activate exclusive mode.
@@ -39,6 +41,8 @@ class LaunchParameters:
     command: list[str]
     work_directory: str
     name: str = ""
+    total_jobs: int = 1
+    max_simul_jobs: int = 1
     nodes: int = 0
     ntasks: int = 0
     exclusive: bool = False
