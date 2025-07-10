@@ -78,3 +78,29 @@ def test_reconnect(
     )
     tests.job_cases.test_reconnect(local_plugin, protocol, job_params)
     shutil.rmtree(work_dir)
+
+
+def test_array(local_plugin: str, local_args: dict[str, typing.Any]) -> None:
+    job_params, protocol, work_dir = local_case_config(
+        local_plugin, local_args, "array", "array.py"
+    )
+    tests.job_cases.test_array(local_plugin, protocol, job_params)
+    shutil.rmtree(work_dir)
+
+
+def test_array_ko(local_plugin: str, local_args: dict[str, typing.Any]) -> None:
+    job_params, protocol, work_dir = local_case_config(
+        local_plugin, local_args, "array_ko", "array_ko.py"
+    )
+    tests.job_cases.test_array_ko(local_plugin, protocol, job_params)
+    shutil.rmtree(work_dir)
+
+
+def test_array_cancel(
+    local_plugin: str, local_args: dict[str, typing.Any]
+) -> None:
+    job_params, protocol, work_dir = local_case_config(
+        local_plugin, local_args, "array_cancel", "array.py"
+    )
+    tests.job_cases.test_array_cancel(local_plugin, protocol, job_params)
+    shutil.rmtree(work_dir)

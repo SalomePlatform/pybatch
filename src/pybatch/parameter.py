@@ -14,7 +14,8 @@ class LaunchParameters:
       * host - remote host where the job will be launched.
       * user - user name if needed.
       * name - name of the job.
-      * total_jobs - total number of jobs using a job array.
+      * total_jobs - total number of jobs using a job array. The job index is
+        passed as the last argument to the command.
       * max_simul_jobs - maximum number of simultaneous jobs using a job array.
       * nodes - number of required nodes, 0 for undefined.
       * ntasks - number of required tasks, 0 for undefined.

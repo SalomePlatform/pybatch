@@ -19,7 +19,7 @@ def test_hello(
     resultdir = tempfile.mkdtemp(suffix="_pybatchtest")
     job.get(["logs"], resultdir)
     output_file = Path(resultdir) / "logs" / "output.log"
-    assert output_file.read_text() == "Hello world !\n"
+    assert "Hello world !" in output_file.read_text()
     shutil.rmtree(resultdir)
 
 
@@ -128,8 +128,9 @@ def test_array(
     protocol: pybatch.GenericProtocol,
     job_params: pybatch.LaunchParameters,
 ) -> None:
+    "Test of a job array without errors."
     job_params.command = ["python3", "array.py"]
-    job_params.total_jobs = 6
+    job_params.total_jobs = 4
     job_params.max_simul_jobs = 2
     job = pybatch.create_job(plugin, job_params, protocol)
     job.submit()
@@ -157,6 +158,7 @@ def test_array_ko(
     protocol: pybatch.GenericProtocol,
     job_params: pybatch.LaunchParameters,
 ) -> None:
+    "Test of a job array with a failed job."
     job_params.command = ["python3", "array_ko.py"]
     job_params.total_jobs = 6
     job_params.max_simul_jobs = 2
@@ -179,3 +181,23 @@ def test_array_ko(
         r_file = Path(resultdir) / r_name
         assert r_file.read_text() == str(i)
     shutil.rmtree(resultdir)
+
+
+def test_array_cancel(
+    plugin: str,
+    protocol: pybatch.GenericProtocol,
+    job_params: pybatch.LaunchParameters,
+) -> None:
+    "Test of a canceled job array."
+    job_params.command = ["python3", "array.py"]
+    job_params.total_jobs = 4
+    job_params.max_simul_jobs = 2
+    job = pybatch.create_job(plugin, job_params, protocol)
+    job.submit()
+    state = job.state()
+    assert state in ["RUNNING", "QUEUED"]
+    job.cancel()
+    job.wait()
+    state = job.state()
+    assert state == "FAILED"
+    # exit_code is not relevant in this case

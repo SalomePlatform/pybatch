@@ -158,3 +158,13 @@ def test_array_ko(
     )
     tests.job_cases.test_array_ko(remote_plugin, protocol, job_params)
     clean(protocol, job_params.work_directory)
+
+
+def test_array_cancel(
+    remote_plugin: str, remote_protocol: str, remote_args: dict[str, typing.Any]
+) -> None:
+    job_params, protocol = remote_case_config(
+        remote_plugin, remote_protocol, remote_args, "array_cancel", "array.py"
+    )
+    tests.job_cases.test_array_cancel(remote_plugin, protocol, job_params)
+    clean(protocol, job_params.work_directory)

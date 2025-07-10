@@ -53,6 +53,13 @@ class Job(GenericJob):
             if self.job_params.create_nodefile:
                 if self.job_params.ntasks > 0:
                     command += ["--ntasks", str(self.job_params.ntasks)]
+            if self.job_params.total_jobs > 1:
+                command += ["--total_jobs", str(self.job_params.total_jobs)]
+                if self.job_params.max_simul_jobs > 1:
+                    command += [
+                        "--max_simul_jobs",
+                        str(self.job_params.max_simul_jobs),
+                    ]
             command += self.job_params.command
             self.jobid = self.protocol.run(command).strip()
             int(self.jobid)  # check

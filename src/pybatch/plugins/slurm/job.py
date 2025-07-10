@@ -59,14 +59,7 @@ def reduce_states(states_list: list[str], max_number_of_states: int) -> str:
         # if all the jobs are listed by squeue (not always the case!)
         if "FAILED" in simple_states:
             return "FAILED"
-        # At this point, all the states should be
-        # FINISHED or ""
-        all_finished = True
-        for st in simple_states:
-            if st != "FINISHED":
-                all_finished = False
-                break
-        if all_finished:
+        else:
             return "FINISHED"
     return ""
 
@@ -180,10 +173,37 @@ class Job(GenericJob):
             if self.number_of_jobs > 1:
                 list_states = sacct_state.splitlines()
                 st = reduce_states(list_states, self.number_of_jobs)
-                # There are cases where some jobs are finished but remaining
-                # jobs have not been queued yet.
-                if not st and len(list_states) < self.number_of_jobs:
-                    st = "RUNNING"
+                if not st:
+                    # No RUNNING, no PENDING and
+                    # len(list_states) < number_of_jobs
+                    # The main job in the array is the job which is launched the
+                    # last but its state is PENDING from the start of the array
+                    # until the job is actually launched. The other jobs are not
+                    # listed from the start. They are listed only when they can
+                    # be launched, when the jobs that are before in the array
+                    # are finished.
+                    # When a job is scheduled to be launched, it takes a little
+                    # while before seeing it with the acct command. This is why
+                    # it is possible to have all listed jobs FINISHED or FAILED,
+                    # but some jobs of the array not listed yet.
+                    if "CANCELLED" in sacct_state:
+                        # The main job is not "PENDING" and there are less
+                        # states listed than the total number of jobs in the
+                        # array. At least one job has cancelled state.
+                        # This happens when the job array is cancelled, but also
+                        # when a particular job in the array is cancelled after
+                        # the end of the main job, if the main job is shorter
+                        # than other jobs.
+                        # WARNING If the main job has started and an individual
+                        # job in the array was cancelled, the arrays is set as
+                        # FAILED despite some jobs may be still running but not
+                        # yet scheduled. To be investigated.
+                        st = "FAILED"
+                    else:
+                        # The main job finished very fast and the scheduler have
+                        # not added to queue all the jobs of the last slice in
+                        # the array yet.
+                        st = "RUNNING"
             else:
                 st = simplified_state(sacct_state)
         except Exception as e:
@@ -198,31 +218,40 @@ class Job(GenericJob):
     def exit_code(self) -> int | None:
         if not self.jobid:
             return None
+        state = self.state()
+        if state == "FINISHED":
+            return 0
+        if state != "FAILED":
+            return None
         try:
             command = [
                 "sacct",
-                "-X",  # ignore steps
+                # "-X",  # ignore steps
                 "-o",  # output fields
                 "ExitCode%-10",
                 "-n",  # no header
                 "-j",  # jobid
                 self.jobid,
             ]
-            code_str = self.protocol.run(command)  # format 0:0
-            if self.number_of_jobs > 1:
-                list_codes = code_str.splitlines()
-                if len(list_codes) < self.number_of_jobs:
-                    result = None
-                else:
-                    list_results = [int(v.split(":")[0]) for v in list_codes]
-                    # get the first non zero exit code
-                    result = 0
-                    for x in list_results:
-                        if x != 0:
-                            result = x
-                            break
-            else:
-                result = int(code_str.split(":")[0])
+            # code_str format: <exit_code>:<signal_received>
+            # If ok, code_str is "0:0"
+            # If cancel, code_str is "0:15"
+            # If exit 1, code_str is "1:0"
+
+            code_str = self.protocol.run(command)
+            result = None
+            if code_str:
+                # The result is the first non 0 value found, job steps included.
+                result = 0
+                for val in code_str.splitlines():
+                    signal_received = int(val.split(":")[1])
+                    if signal_received != 0:
+                        cur_val = signal_received
+                    else:
+                        cur_val = int(val.split(":")[0])
+                    if cur_val != 0:
+                        result = cur_val
+                        break
         except Exception:
             result = None
         return result
@@ -298,6 +327,9 @@ LIBBATCH_NODEFILE=`pwd`/batch_nodefile.txt
 srun hostname > $LIBBATCH_NODEFILE
 export LIBBATCH_NODEFILE
 """
+        # batch += "echo Jobid: $SLURM_JOB_ID\n"
+        # if self.job_params.total_jobs > 1:
+        #     batch += "echo master Jobid: $SLURM_ARRAY_JOB_ID\n"
         command = self.job_params.command
         str_command = command[0]
         for arg in command[1:]:

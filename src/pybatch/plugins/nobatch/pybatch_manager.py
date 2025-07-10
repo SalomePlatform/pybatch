@@ -20,20 +20,90 @@ import sys
 import logging
 import socket
 
+global interrupted
+interrupted = False
+
 
 def handler(proc, signum, frame):
     proc.terminate()
+    global interrupted
+    interrupted = True
 
 
-def submit(workdir, command, wall_time, ntasks):
+def run_one_job(workdir, command, wall_time, log_path, stdout_log, stderr_log):
+    # file descriptors are automaticaly closed by default
+    # (see close_fds argument of Popen).
+    stdout_file = open(str(stdout_log), "w")  # python 3.5
+    stderr_file = open(str(stderr_log), "w")  # python 3.5
+    message = "Launch command: " + str(command)
+    logging.info(message)
+    proc = subprocess.Popen(
+        command, stdout=stdout_file, stderr=stderr_file, cwd=workdir
+    )
+    signal.signal(signal.SIGTERM, functools.partial(handler, proc))
+    try:
+        exit_code = proc.wait(wall_time)
+    except subprocess.TimeoutExpired:
+        proc.terminate()
+        logging.info("Timeout expired! Terminate child.")
+        exit_code = proc.wait()
+    exit_log = str(log_path / "exit_code.log")  # python 3.5
+    with open(exit_log, "w") as exit_file:
+        exit_file.write(str(exit_code))
+
+
+def run_many_jobs(
+    workdir,
+    command,
+    wall_time,
+    log_path,
+    stdout_log,
+    stderr_log,
+    total_jobs,
+    max_simul_jobs,
+):
+    # TODO deal with max_simul_jobs
+    global_exit_code = 0
+    for idx in range(total_jobs):
+        # file descriptors are automaticaly closed by default
+        # (see close_fds argument of Popen).
+        stdout_file = open(str(stdout_log), "a")  # python 3.5
+        stderr_file = open(str(stderr_log), "a")  # python 3.5
+        current_command = command + [str(idx)]
+        message = "Launch command[{}]: {}"
+        message = message.format(idx, current_command)
+        logging.info(message)
+        proc = subprocess.Popen(
+            current_command, stdout=stdout_file, stderr=stderr_file, cwd=workdir
+        )
+        signal.signal(signal.SIGTERM, functools.partial(handler, proc))
+        try:
+            exit_code = proc.wait(wall_time)
+        except subprocess.TimeoutExpired:
+            proc.terminate()
+            message = "Timeout expired! Terminate child[{}].".format(idx)
+            logging.info(message)
+            exit_code = proc.wait()
+        if exit_code != 0:
+            global_exit_code = exit_code
+        global interrupted
+        if interrupted:
+            break
+    exit_log = str(log_path / "exit_code.log")  # python 3.5
+    with open(exit_log, "w") as exit_file:
+        exit_file.write(str(global_exit_code))
+
+
+def submit(workdir, command, wall_time, ntasks, total_jobs, max_simul_jobs):
     """Launch a command and return immediatly.
 
     The command is launched in workdir.
     The pid of the created process is printed on stdout.
     """
-    message = "submit workdir={}, command={}, walltime={}".format(
-        workdir, command, wall_time
+    message = (
+        "submit workdir={}, command={}, walltime={}, ntasks={}, total_jobs={}"
     )
+    message = message.format(workdir, command, wall_time, ntasks, total_jobs)
     logging.info(message)
     # check access to workdir before fork.
     log_path = Path(workdir) / "logs"
@@ -67,23 +137,21 @@ def submit(workdir, command, wall_time, ntasks):
     os.dup2(log.fileno(), sys.stderr.fileno())
     os.dup2(os.open(os.devnull, os.O_RDWR), sys.stdin.fileno())
 
-    # file descriptors are automaticaly closed by default
-    # (see close_fds argument of Popen).
-    stdout_file = open(str(stdout_log), "w")  # python 3.5
-    stderr_file = open(str(stderr_log), "w")  # python 3.5
-    proc = subprocess.Popen(
-        command, stdout=stdout_file, stderr=stderr_file, cwd=workdir
-    )
-    signal.signal(signal.SIGTERM, functools.partial(handler, proc))
-    try:
-        exit_code = proc.wait(wall_time)
-    except subprocess.TimeoutExpired:
-        proc.terminate()
-        print("Timeout expired! Terminate child.")
-        exit_code = proc.wait()
-    exit_log = str(log_path / "exit_code.log")  # python 3.5
-    with open(exit_log, "w") as exit_file:
-        exit_file.write(str(exit_code))
+    if total_jobs > 1:
+        run_many_jobs(
+            workdir,
+            command,
+            wall_time,
+            log_path,
+            stdout_log,
+            stderr_log,
+            total_jobs,
+            max_simul_jobs,
+        )
+    else:
+        run_one_job(
+            workdir, command, wall_time, log_path, stdout_log, stderr_log
+        )
 
 
 def wait(proc_id):
@@ -165,6 +233,18 @@ def main(args_list=None):
         default=0,
         help="If positive, generate batch_nodefile.txt.",
     )
+    parser_submit.add_argument(
+        "--total_jobs",
+        type=int,
+        default=1,
+        help="Number of jobs to launch, 1 by default.",
+    )
+    parser_submit.add_argument(
+        "--max_simul_jobs",
+        type=int,
+        default=1,
+        help="For future use. Parameter ignored.",
+    )
     parser_submit.add_argument("command", nargs="+", help="Command to submit.")
 
     parser_wait = subparsers.add_parser(
@@ -183,7 +263,14 @@ def main(args_list=None):
 
     args = parser.parse_args(args_list)
     if args.mode == "submit":
-        submit(args.work_dir, args.command, args.wall_time, args.ntasks)
+        submit(
+            args.work_dir,
+            args.command,
+            args.wall_time,
+            args.ntasks,
+            args.total_jobs,
+            args.max_simul_jobs,
+        )
     elif args.mode == "wait":
         wait(args.proc)
     elif args.mode == "state":
