@@ -45,6 +45,14 @@ class GenericJob(typing.Protocol):
         "Get the content of the batch file submited to the batch manager."
         ...
 
+    def stdout(self) -> str:
+        "Standard output of the job."
+        ...
+
+    def stderr(self) -> str:
+        "Standard error of the job."
+        ...
+
     # A réfléchir, mais il vaut peut-être mieux d'utiliser la sérialisation
     # pickle.
     def dump(self) -> str:

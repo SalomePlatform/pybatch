@@ -138,6 +138,14 @@ class Job(GenericJob):
                 abs_remote_path = os.path.realpath(tmp_path)
             copy(abs_remote_path, local_path)
 
+    def stdout(self) -> str:
+        output_file = Path(self.work_directory, "logs", "output.log")
+        return output_file.read_text()
+
+    def stderr(self) -> str:
+        output_file = Path(self.work_directory, "logs", "error.log")
+        return output_file.read_text()
+
     def config(self) -> dict[str, typing.Any]:
         cfg: dict[str, typing.Any] = {
             "command": self.command,

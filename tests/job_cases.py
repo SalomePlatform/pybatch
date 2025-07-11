@@ -18,8 +18,7 @@ def test_hello(
     assert state == "FINISHED"
     resultdir = tempfile.mkdtemp(suffix="_pybatchtest")
     job.get(["logs"], resultdir)
-    output_file = Path(resultdir) / "logs" / "output.log"
-    assert "Hello world !" in output_file.read_text()
+    assert "Hello world !" in job.stdout()
     shutil.rmtree(resultdir)
 
 

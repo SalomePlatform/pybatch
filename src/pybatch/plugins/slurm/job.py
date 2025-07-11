@@ -285,6 +285,24 @@ class Job(GenericJob):
                 checked_paths.append(p)
         self.protocol.download(checked_paths, local_path)
 
+    def stdout(self) -> str:
+        output_file = path_join(
+            self.job_params.work_directory,
+            "logs",
+            "output.log",
+            is_posix=self.job_params.is_posix,
+        )
+        return self.protocol.read(str(output_file))
+
+    def stderr(self) -> str:
+        output_file = path_join(
+            self.job_params.work_directory,
+            "logs",
+            "error.log",
+            is_posix=self.job_params.is_posix,
+        )
+        return self.protocol.read(str(output_file))
+
     def batch_file(self) -> str:
         "Get the content of the batch file submited to the batch manager."
         batch = """#!/bin/bash -l

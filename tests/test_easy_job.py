@@ -22,10 +22,8 @@ def test_python_script(job_plugin):
     job.submit()
     job.wait()
 
-    output_file = Path(workdir) / "logs" / "output.log"
-    assert output_file.read_text() == "Hello world !\n"
-    error_file = Path(workdir) / "logs" / "error.log"
-    assert not error_file.read_text()  # empty file expected
+    assert "Hello world !" in job.stdout()
+    assert not job.stderr()
     assert job.exit_code() == 0
     shutil.rmtree(workdir)
 
@@ -64,10 +62,8 @@ def test_error_script(job_plugin):
     job.submit()
     job.wait()
 
-    output_file = Path(workdir) / "logs" / "output.log"
-    assert output_file.read_text() == "Problems comming...\n"
-    error_file = Path(workdir) / "logs" / "error.log"
-    assert "Oups!" in error_file.read_text()
+    assert "Problems comming..." in job.stdout()
+    assert "Oups!" in job.stderr()
     assert job.exit_code() == 1
     shutil.rmtree(workdir)
 
@@ -176,8 +172,7 @@ def test_files_and_directories(job_plugin):
     job = pybatch.create_job(job_plugin, params)
     job.submit()
     job.wait()
-    error_file = Path(workdir) / "logs" / "error.log"
-    assert not error_file.read_text()  # empty file expected
+    assert not job.stderr()
     assert job.exit_code() == 0
     job.get(["output.txt"], resultdir)
     assert (Path(resultdir) / "output.txt").read_text() == "51"
