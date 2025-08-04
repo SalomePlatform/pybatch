@@ -24,6 +24,9 @@ job_params = pybatch.LaunchParameters(
     wckey="P120K:SALOME"
 )
 # Other possible parameters:
+#  total_jobs - number of jobs in a job array. When the command to execute is
+#     called, the index of the current job is added as the last argument.
+#  max_simul_jobs - max number of simultaneous jobs in a job array.
 #  exclusive - activate exclusive mode.
 #  mem_per_node - memory required per node (ex. "32G").
 #  mem_per_cpu - minimum memory required per usable allocated CPU.

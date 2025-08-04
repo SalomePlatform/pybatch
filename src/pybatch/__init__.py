@@ -9,7 +9,7 @@ __all__ = [
 from .genericjob import GenericJob
 from .generic_protocol import GenericProtocol
 from .parameter import LaunchParameters, ConnectionParameters
-from .jobmanager import create_job
+from .job_factory import create_job
 
 # WARNING `python_requires = >= 3.8`
 from importlib.metadata import PackageNotFoundError, version  # pragma: no cover

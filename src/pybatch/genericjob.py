@@ -42,7 +42,11 @@ class GenericJob(typing.Protocol):
         ...
 
     def batch_file(self) -> str:
-        "Get the content of the batch file submited to the batch manager."
+        """Get the content of the batch file submitted to the batch manager.
+
+        This function is not relevant if the job is not submitted to a batch
+        manager that uses a submission file.
+        """
         ...
 
     def stdout(self) -> str:
@@ -53,8 +57,10 @@ class GenericJob(typing.Protocol):
         "Standard error of the job."
         ...
 
-    # A réfléchir, mais il vaut peut-être mieux d'utiliser la sérialisation
-    # pickle.
     def dump(self) -> str:
-        "Serialization of the job in a humanly readable format."
+        """Serialization of the job in a humanly readable format.
+
+        This feature is not implemented yet because it is possible to use pickle
+        for automatic serialization.
+        """
         ...

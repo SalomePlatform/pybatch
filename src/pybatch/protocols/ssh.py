@@ -7,6 +7,8 @@ from .. import PybatchException
 
 
 class SshProtocol:
+    """Communication protocol using the external commands ssh and scp."""
+
     def __init__(self, params: ConnectionParameters):
         self._host = params.host
         self._user = params.user

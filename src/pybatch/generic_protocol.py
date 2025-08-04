@@ -5,7 +5,10 @@ from pathlib import Path
 
 
 class GenericProtocol(typing.Protocol):
-    "Connection protocol (ssh, local, ...)."
+    """Connection protocol (ssh, local, ...).
+
+    This interface defines the services expected from a connection protocol.
+    """
 
     def upload(
         self, local_entries: Iterable[str | Path], remote_path: str

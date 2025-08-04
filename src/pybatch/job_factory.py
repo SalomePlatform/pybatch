@@ -14,6 +14,8 @@ def create_job(
 
     :param plugin_name: name of the plugin to use for the job creation.
     :param params: job parameters.
+    :param connection_protocol: protocol for remote connection. None for local
+     use.
     """
 
     # for entry_point in entry_points().get("pybatch.plugins"):
@@ -26,8 +28,8 @@ def create_job(
 
 
 def reload_job(dump: str) -> GenericJob:  # type: ignore
-    """Reload a job from a dumped string.
+    """Reload a job from a dumped string - for future use, not implemented.
 
-    :param dump:
+    :param dump: representation of the job.
     """
     ...  # TODO

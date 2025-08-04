@@ -10,6 +10,12 @@ from ..tools import escape_str
 
 
 class ParamikoProtocol:
+    """Communication protocol based on python modules paramiko and scp.
+
+    The ssh connection is opened when the object is created and it is closed
+    when the object is garbage collected.
+    """
+
     def __init__(self, params: ConnectionParameters):
         client = paramiko.client.SSHClient()
         client.load_system_host_keys()
