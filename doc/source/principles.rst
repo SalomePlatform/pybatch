@@ -56,12 +56,12 @@ This is an exemple how to create a protocol object :
    protocol = ParamikoProtocol(con_param)
 
 
-One big difference between SshProtocol and ParamikoProtocol is that the
-SshProtocol protocol opens an ssh connection with authentication at every
+One big difference between *SshProtocol* and *ParamikoProtocol* is that the
+*SshProtocol* protocol opens an ssh connection with authentication at every
 operation, because there is a call to the command *ssh* at every opertaion.
-The ParamikoProtocol opens a ssh connection when the object is created and all
+The *ParamikoProtocol* opens a ssh connection when the object is created and all
 the operations are made in the same ssh session, with only one authentication.
-This makes ParamikoProtocol faster.
+This makes *ParamikoProtocol* faster.
 
 Jobs
 =====
@@ -74,8 +74,8 @@ The generic interface for a job is :
 
 Implementations available today are :
 
-  - pybatch.plugins.slurm.plugin.Job - for Slurm,
-  - pybatch.plugins.nobatch.plugin.Job - without batch manager.
+  - pybatch.plugins.slurm.job.Job - for Slurm,
+  - pybatch.plugins.nobatch.job.Job - without batch manager.
 
 The parameters of a job are defined by LaunchParameters :
 
@@ -86,4 +86,27 @@ The parameters of a job are defined by LaunchParameters :
 Job factory and plugins
 ========================
 
+Jobs can be created by the function *create_job* which offers the possibility to
+choose among different job implementations available within the python
+environment.
+
 .. autofunction:: pybatch.create_job
+
+Each job implementation is wrapped in a plugin which can be added to the python
+environment using the `python entry points specification
+<https://packaging.python.org/en/latest/specifications/entry-points/>`_.
+The key of these entry points is "pybatch.plugins".
+
+The plugin names defined by the module *pybatch* are :
+
+  - "slurm" - implementation for Slurm batch manager which creates an object of
+    type *pybatch.plugins.slurm.job.Job*.
+  - "nobatch" - implementation that doesn't use any batch manager which creates
+    an object of type *pybatch.plugins.nobatch.job.Job*.
+  - "local" - implementation that doesn't use any batch manager and that can be
+    only used on the local machine, because it doesn't use the GenericProtocol
+    for communication. The object created is of type
+    *pybatch.plugins.local.job.Job*.
+
+Other plugins can be created and added to the entry point "pybatch.plugins" in
+order to make them available to the function *create_job*.
