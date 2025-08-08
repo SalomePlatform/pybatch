@@ -54,6 +54,9 @@ test = [
     "pytest-sugar",   # progress bar & better look output
     "tomli;python_version<'3.11'"
 ]
+distrib = [
+    "build"
+]
 
 [tool.ruff]
 exclude = ["doc"]
