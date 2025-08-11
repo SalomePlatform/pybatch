@@ -9,9 +9,10 @@ git clone https://gitlab.pleiade.edf.fr/I35256/pybatch.git
 ```
 
 ## Basic installation
+The name of the pip package is *salome-pybatch*.
 This installation uses minmalistic dependencies. The only python package used is 'psutil'.
 ```
-pip install pybatch
+pip install salome-pybatch
 ```
 In this kind of installation, the only way to connect to a remote server is to use 'SshProtocol' which needs the 'ssh' external command to be already available on the workstation.
 
@@ -23,7 +24,7 @@ These additional dependencies are :
 
 ```
 pkcon install libkrb5-dev
-pip install pybatch[paramiko]
+pip install salome-pybatch[paramiko]
 ```
 With this kind of installation you can use 'ParamikoProtocol' for remote connections, which does not use any external program.
 
