@@ -37,7 +37,13 @@ def create_job(
     """
 
     # for entry_point in entry_points().get("pybatch.plugins"):
-    for entry_point in entry_points()["pybatch.plugins"]:
+    ep = entry_points()
+    if isinstance(ep, dict):
+        # older python version
+        ep_it = ep["pybatch.plugins"]
+    else:
+        ep_it = ep.select(group="pybatch.plugins")
+    for entry_point in ep_it:
         if entry_point.name == plugin_name:
             plugin = entry_point.load()()
             job: GenericJob = plugin.create_job(params, connection_protocol)
