@@ -19,12 +19,14 @@
 import tempfile
 import os
 import shutil
+import sys
 from pathlib import Path
 import pybatch
 import pybatch.protocols.local
 
 
 def test_protocol_local() -> None:
+    py_exe = sys.executable
     # Test configuration
     test_dir = tempfile.mkdtemp(suffix="_pybatchtest")
     work_dir = os.path.join(test_dir, "remote_dir")
@@ -94,12 +96,12 @@ def test_protocol_local() -> None:
     assert Path(local_test_file_bis).read_text() == file_content
 
     # run
-    command = ["python3", "-c", 'print("Cool!")']
+    command = [py_exe, "-c", 'print("Cool!")']
     res = p.run(command)
     assert res.strip() == "Cool!"
 
     ## run error
-    command = ["python3", "-c", "exit(1)"]
+    command = [py_exe, "-c", "exit(1)"]
     try:
         res = p.run(command)
     except pybatch.PybatchException as e:

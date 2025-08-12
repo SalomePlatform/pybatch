@@ -25,9 +25,11 @@ import shutil
 import inspect
 import subprocess
 import time
+import sys
 
 
 def test_hello():
+    py_exe = sys.executable
     workdir = tempfile.mkdtemp(suffix="_pybatchtest")
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "hello.py"
@@ -36,11 +38,11 @@ def test_hello():
 
     # submit
     args = [
-        "python3",
+        py_exe,
         manager_script,
         "submit",
         workdir,
-        "python3",
+        py_exe,
         "hello.py",
         "zozo",
     ]
@@ -50,12 +52,12 @@ def test_hello():
     assert int(pid) > 0
 
     # wait
-    args = ["python3", manager_script, "wait", pid]
+    args = [py_exe, manager_script, "wait", pid]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
 
     # check
-    args = ["python3", manager_script, "state", pid, workdir]
+    args = [py_exe, manager_script, "state", pid, workdir]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
     state = proc.stdout.strip()
@@ -68,6 +70,7 @@ def test_hello():
 
 
 def test_sleep():
+    py_exe = sys.executable
     workdir = tempfile.mkdtemp(suffix="_pybatchtest")
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "sleep.py"
@@ -76,11 +79,11 @@ def test_sleep():
 
     # submit long job
     args = [
-        "python3",
+        py_exe,
         manager_script,
         "submit",
         workdir,
-        "python3",
+        py_exe,
         "sleep.py",
         "1",
     ]
@@ -90,19 +93,19 @@ def test_sleep():
     assert int(pid) > 0
 
     # state
-    args = ["python3", manager_script, "state", pid, workdir]
+    args = [py_exe, manager_script, "state", pid, workdir]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
     state = proc.stdout.strip()
     assert state == "RUNNING"
 
     # wait
-    args = ["python3", manager_script, "wait", pid]
+    args = [py_exe, manager_script, "wait", pid]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
 
     # check
-    args = ["python3", manager_script, "state", pid, workdir]
+    args = [py_exe, manager_script, "state", pid, workdir]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
     state = proc.stdout.strip()
@@ -115,6 +118,7 @@ def test_sleep():
 
 
 def test_cancel():
+    py_exe = sys.executable
     workdir = tempfile.mkdtemp(suffix="_pybatchtest")
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "sleep.py"
@@ -123,11 +127,11 @@ def test_cancel():
 
     # submit long job
     args = [
-        "python3",
+        py_exe,
         manager_script,
         "submit",
         workdir,
-        "python3",
+        py_exe,
         "sleep.py",
         "1",
     ]
@@ -137,21 +141,21 @@ def test_cancel():
     assert int(pid) > 0
 
     # state
-    args = ["python3", manager_script, "state", pid, workdir]
+    args = [py_exe, manager_script, "state", pid, workdir]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
     state = proc.stdout.strip()
     assert state == "RUNNING"
 
     # cancel
-    args = ["python3", manager_script, "cancel", pid]
+    args = [py_exe, manager_script, "cancel", pid]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
 
     time.sleep(2)
 
     # check
-    args = ["python3", manager_script, "state", pid, workdir]
+    args = [py_exe, manager_script, "state", pid, workdir]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
     state = proc.stdout.strip()
@@ -166,6 +170,7 @@ def test_cancel():
 
 def test_timeout():
     """Wall time shorter than execution time."""
+    py_exe = sys.executable
     workdir = tempfile.mkdtemp(suffix="_pybatchtest")
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "sleep.py"
@@ -174,13 +179,13 @@ def test_timeout():
 
     # submit long job
     args = [
-        "python3",
+        py_exe,
         manager_script,
         "submit",
         workdir,
         "--wall_time",
         "1",
-        "python3",
+        py_exe,
         "sleep.py",
         "3",
     ]
@@ -190,7 +195,7 @@ def test_timeout():
     assert int(pid) > 0
 
     # state
-    args = ["python3", manager_script, "state", pid, workdir]
+    args = [py_exe, manager_script, "state", pid, workdir]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
     state = proc.stdout.strip()
@@ -199,7 +204,7 @@ def test_timeout():
     time.sleep(2)
 
     # check
-    args = ["python3", manager_script, "state", pid, workdir]
+    args = [py_exe, manager_script, "state", pid, workdir]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
     state = proc.stdout.strip()
@@ -214,6 +219,7 @@ def test_timeout():
 
 def test_notimeout():
     """Walltime longer than execution time."""
+    py_exe = sys.executable
     workdir = tempfile.mkdtemp(suffix="_pybatchtest")
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "sleep.py"
@@ -222,13 +228,13 @@ def test_notimeout():
 
     # submit
     args = [
-        "python3",
+        py_exe,
         manager_script,
         "submit",
         workdir,
         "--wall_time",
         "3",
-        "python3",
+        py_exe,
         "sleep.py",
         "1",
     ]
@@ -238,7 +244,7 @@ def test_notimeout():
     assert int(pid) > 0
 
     # state
-    args = ["python3", manager_script, "state", pid, workdir]
+    args = [py_exe, manager_script, "state", pid, workdir]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
     state = proc.stdout.strip()
@@ -247,7 +253,7 @@ def test_notimeout():
     time.sleep(2)
 
     # check
-    args = ["python3", manager_script, "state", pid, workdir]
+    args = [py_exe, manager_script, "state", pid, workdir]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
     state = proc.stdout.strip()
@@ -261,19 +267,20 @@ def test_notimeout():
 
 def test_array():
     "Simulation of a job array Slurm"
+    py_exe = sys.executable
     workdir = tempfile.mkdtemp(suffix="_pybatchtest")
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "array.py"
     shutil.copy(script, workdir)
     manager_script = shutil.copy(inspect.getfile(manager), workdir)
     args = [
-        "python3",
+        py_exe,
         manager_script,
         "submit",
         workdir,
         "--total_jobs",
         "4",
-        "python3",
+        py_exe,
         "array.py",
     ]
     proc = subprocess.run(args, capture_output=True, text=True)
@@ -282,19 +289,19 @@ def test_array():
     assert int(pid) > 0
 
     # state
-    args = ["python3", manager_script, "state", pid, workdir]
+    args = [py_exe, manager_script, "state", pid, workdir]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
     state = proc.stdout.strip()
     assert state == "RUNNING"
 
     # wait
-    args = ["python3", manager_script, "wait", pid]
+    args = [py_exe, manager_script, "wait", pid]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
 
     # check
-    args = ["python3", manager_script, "state", pid, workdir]
+    args = [py_exe, manager_script, "state", pid, workdir]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
     state = proc.stdout.strip()
@@ -309,19 +316,20 @@ def test_array():
 
 def test_array_ko():
     "Job array with a failed job"
+    py_exe = sys.executable
     workdir = tempfile.mkdtemp(suffix="_pybatchtest")
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "array_ko.py"
     shutil.copy(script, workdir)
     manager_script = shutil.copy(inspect.getfile(manager), workdir)
     args = [
-        "python3",
+        py_exe,
         manager_script,
         "submit",
         workdir,
         "--total_jobs",
         "4",
-        "python3",
+        py_exe,
         "array_ko.py",
     ]
     proc = subprocess.run(args, capture_output=True, text=True)
@@ -330,19 +338,19 @@ def test_array_ko():
     assert int(pid) > 0
 
     # state
-    args = ["python3", manager_script, "state", pid, workdir]
+    args = [py_exe, manager_script, "state", pid, workdir]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
     state = proc.stdout.strip()
     assert state == "RUNNING"
 
     # wait
-    args = ["python3", manager_script, "wait", pid]
+    args = [py_exe, manager_script, "wait", pid]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
 
     # check
-    args = ["python3", manager_script, "state", pid, workdir]
+    args = [py_exe, manager_script, "state", pid, workdir]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
     state = proc.stdout.strip()
@@ -359,19 +367,20 @@ def test_array_ko():
 
 def test_array_cancel():
     "Cancel on a job array."
+    py_exe = sys.executable
     workdir = tempfile.mkdtemp(suffix="_pybatchtest")
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "array.py"
     shutil.copy(script, workdir)
     manager_script = shutil.copy(inspect.getfile(manager), workdir)
     args = [
-        "python3",
+        py_exe,
         manager_script,
         "submit",
         workdir,
         "--total_jobs",
         "4",
-        "python3",
+        py_exe,
         "array.py",
     ]
     proc = subprocess.run(args, capture_output=True, text=True)
@@ -380,19 +389,19 @@ def test_array_cancel():
     assert int(pid) > 0
 
     # state
-    args = ["python3", manager_script, "state", pid, workdir]
+    args = [py_exe, manager_script, "state", pid, workdir]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
     state = proc.stdout.strip()
     assert state == "RUNNING"
 
     # cancel
-    args = ["python3", manager_script, "cancel", pid]
+    args = [py_exe, manager_script, "cancel", pid]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
 
     # state
-    args = ["python3", manager_script, "state", pid, workdir]
+    args = [py_exe, manager_script, "state", pid, workdir]
     proc = subprocess.run(args, capture_output=True, text=True)
     assert proc.returncode == 0
     state = proc.stdout.strip()

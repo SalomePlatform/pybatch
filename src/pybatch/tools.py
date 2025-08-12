@@ -18,9 +18,10 @@
 #
 from __future__ import annotations
 import pathlib
-from . import PybatchException
 import subprocess
 import typing
+from . import PybatchException
+from .generic_protocol import GenericProtocol
 
 
 def path_join(base: str, *paths: str, is_posix: bool) -> str:
@@ -123,3 +124,16 @@ def escape_str(val: str) -> str:
     else:
         result = val
     return result
+
+
+def remote_mkdir(protocol: GenericProtocol, dir: str, python_exe: str) -> None:
+    """Create a directory on a remote server.
+
+    The directory is created by running a python command.
+    :param protocol: Connection protocol to the remote server.
+    :param dir: Path of the remote directory to be created.
+    :param python_exe: Path to the python executable on the remote server.
+    """
+    py_script = f"from pathlib import Path; Path('{dir}').mkdir(parents=True, exist_ok=True)"
+    command = [python_exe, "-c", py_script]
+    protocol.run(command)

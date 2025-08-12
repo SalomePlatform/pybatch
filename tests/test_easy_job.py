@@ -16,11 +16,14 @@
 #
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
+"""Local tests for any plugin."""
+
 import tempfile
 from pathlib import Path
 import os
 import shutil
 import time
+import sys
 
 
 def test_python_script(job_plugin):
@@ -34,7 +37,7 @@ def test_python_script(job_plugin):
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "hello.py"
     params = pybatch.LaunchParameters(
-        ["python3", "hello.py", "world"], workdir, input_files=[script]
+        [sys.executable, "hello.py", "world"], workdir, input_files=[script]
     )
     job = pybatch.create_job(job_plugin, params)
     job.submit()
@@ -54,7 +57,7 @@ def test_finish_without_wait(job_plugin):
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "hello.py"
     params = pybatch.LaunchParameters(
-        ["python3", "hello.py", "world"], workdir, input_files=[script]
+        [sys.executable, "hello.py", "world"], workdir, input_files=[script]
     )
     job = pybatch.create_job(job_plugin, params)
     job.submit()
@@ -74,7 +77,7 @@ def test_error_script(job_plugin):
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "error.py"
     params = pybatch.LaunchParameters(
-        ["python3", "error.py"], workdir, input_files=[script]
+        [sys.executable, "error.py"], workdir, input_files=[script]
     )
     job = pybatch.create_job(job_plugin, params)
     job.submit()
@@ -94,7 +97,7 @@ def test_state(job_plugin):
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "sleep.py"
     params = pybatch.LaunchParameters(
-        ["python3", "sleep.py", "1"], workdir, input_files=[script]
+        [sys.executable, "sleep.py", "1"], workdir, input_files=[script]
     )
     job = pybatch.create_job(job_plugin, params)
     assert job.state() == "CREATED"
@@ -116,7 +119,7 @@ def test_cancel(job_plugin):
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "sleep.py"
     params = pybatch.LaunchParameters(
-        ["python3", "sleep.py", "2"], workdir, input_files=[script]
+        [sys.executable, "sleep.py", "2"], workdir, input_files=[script]
     )
     job = pybatch.create_job(job_plugin, params)
     assert job.state() == "CREATED"
@@ -139,7 +142,7 @@ def test_serialization(job_plugin):
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "sleep.py"
     params = pybatch.LaunchParameters(
-        ["python3", "sleep.py", "1"], workdir, input_files=[script]
+        [sys.executable, "sleep.py", "1"], workdir, input_files=[script]
     )
     job = pybatch.create_job(job_plugin, params)
     job.submit()
@@ -159,7 +162,7 @@ def test_wall_time(job_plugin):
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "sleep.py"
     params = pybatch.LaunchParameters(
-        ["python3", "sleep.py", "3"],
+        [sys.executable, "sleep.py", "3"],
         workdir,
         input_files=[script],
         wall_time="0:1",  # 1s
@@ -183,7 +186,7 @@ def test_files_and_directories(job_plugin):
     file_input = Path(current_file_dir) / "data" / "input.txt"
     dir_input = Path(current_file_dir) / "data" / "data"
     params = pybatch.LaunchParameters(
-        ["python3", "code.py", "1"],
+        [sys.executable, "code.py", "1"],
         workdir,
         input_files=[script, file_input, dir_input],
     )

@@ -28,7 +28,7 @@ def test_hello(
     protocol: pybatch.GenericProtocol,
     job_params: pybatch.LaunchParameters,
 ) -> None:
-    job_params.command = ["python3", "hello.py", "world"]
+    job_params.command = [job_params.python_exe, "hello.py", "world"]
     job = pybatch.create_job(plugin, job_params, protocol)
     job.submit()
     job.wait()
@@ -45,7 +45,7 @@ def test_sleep(
     protocol: pybatch.GenericProtocol,
     job_params: pybatch.LaunchParameters,
 ) -> None:
-    job_params.command = ["python3", "sleep.py", "10"]
+    job_params.command = [job_params.python_exe, "sleep.py", "10"]
     job = pybatch.create_job(plugin, job_params, protocol)
     job.submit()
 
@@ -66,7 +66,7 @@ def test_cancel(
     protocol: pybatch.GenericProtocol,
     job_params: pybatch.LaunchParameters,
 ) -> None:
-    job_params.command = ["python3", "sleep.py", "10"]
+    job_params.command = [job_params.python_exe, "sleep.py", "10"]
     job = pybatch.create_job(plugin, job_params, protocol)
     job.submit()
 
@@ -88,7 +88,7 @@ def test_error(
     protocol: pybatch.GenericProtocol,
     job_params: pybatch.LaunchParameters,
 ) -> None:
-    job_params.command = ["python3", "error.py"]
+    job_params.command = [job_params.python_exe, "error.py"]
     job = pybatch.create_job(plugin, job_params, protocol)
     job.submit()
     job.wait()
@@ -103,7 +103,7 @@ def test_nodefile(
 ) -> None:
     job_params.ntasks = 4
     job_params.create_nodefile = True
-    job_params.command = ["python3", "check_nodefile.py", "4"]
+    job_params.command = [job_params.python_exe, "check_nodefile.py", "4"]
     job = pybatch.create_job(plugin, job_params, protocol)
     job.submit()
     job.wait()
@@ -121,7 +121,7 @@ def test_reconnect(
     protocol: pybatch.GenericProtocol,
     job_params: pybatch.LaunchParameters,
 ) -> None:
-    job_params.command = ["python3", "sleep.py", "10"]
+    job_params.command = [job_params.python_exe, "sleep.py", "10"]
     job = pybatch.create_job(plugin, job_params, protocol)
     job.submit()
     import pickle
@@ -146,7 +146,7 @@ def test_array(
     job_params: pybatch.LaunchParameters,
 ) -> None:
     "Test of a job array without errors."
-    job_params.command = ["python3", "array.py"]
+    job_params.command = [job_params.python_exe, "array.py"]
     job_params.total_jobs = 4
     job_params.max_simul_jobs = 2
     job = pybatch.create_job(plugin, job_params, protocol)
@@ -176,7 +176,7 @@ def test_array_ko(
     job_params: pybatch.LaunchParameters,
 ) -> None:
     "Test of a job array with a failed job."
-    job_params.command = ["python3", "array_ko.py"]
+    job_params.command = [job_params.python_exe, "array_ko.py"]
     job_params.total_jobs = 6
     job_params.max_simul_jobs = 2
     job = pybatch.create_job(plugin, job_params, protocol)
@@ -206,7 +206,7 @@ def test_array_cancel(
     job_params: pybatch.LaunchParameters,
 ) -> None:
     "Test of a canceled job array."
-    job_params.command = ["python3", "array.py"]
+    job_params.command = [job_params.python_exe, "array.py"]
     job_params.total_jobs = 4
     job_params.max_simul_jobs = 2
     job = pybatch.create_job(plugin, job_params, protocol)

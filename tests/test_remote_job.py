@@ -34,6 +34,8 @@ def create_launch_parameters(
         params.wckey = config["wckey"]
     if "is_posix" in config:
         params.is_posix = config["is_posix"]
+    if "python_exe" in config:
+        params.python_exe = config["python_exe"]
     params.wall_time = "1"  # one minute
     return params
 

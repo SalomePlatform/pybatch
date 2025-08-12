@@ -22,16 +22,11 @@ import os
 
 from ... import GenericJob, GenericProtocol, LaunchParameters, PybatchException
 from ...protocols.local import LocalProtocol
-from ...tools import path_join, is_absolute, slurm_time_to_seconds
+from ...tools import path_join, is_absolute, slurm_time_to_seconds, remote_mkdir
 
 
 class Job(GenericJob):
-    def __init__(
-        self,
-        param: LaunchParameters,
-        protocol: GenericProtocol,
-        remote_python_exe: str = "python3",
-    ):
+    def __init__(self, param: LaunchParameters, protocol: GenericProtocol):
         self.job_params = param
         self.protocol: GenericProtocol
         if protocol is None:
@@ -39,21 +34,17 @@ class Job(GenericJob):
         else:
             self.protocol = protocol
         self.jobid = ""
-        self.remote_python_exe = remote_python_exe
+        self.remote_python_exe = param.python_exe
         self.remote_manager_path = path_join(
             param.work_directory, "pybatch_manager.py", is_posix=param.is_posix
         )
 
     def submit(self) -> None:
         try:
-            if self.job_params.is_posix:
-                logdir = path_join(
-                    self.job_params.work_directory, "logs", is_posix=True
-                )
-                command = ["mkdir", "-p", logdir]
-                self.protocol.run(command)
-            else:
-                pass  # TODO
+            logdir = path_join(
+                self.job_params.work_directory, "logs", is_posix=True
+            )
+            remote_mkdir(self.protocol, logdir, self.remote_python_exe)
 
             file_dir = Path(os.path.dirname(__file__))
             manager_script = file_dir / "pybatch_manager.py"

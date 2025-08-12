@@ -39,6 +39,8 @@ def local_case_config(
     params = pybatch.LaunchParameters([], work_dir)
     if "wckey" in config:
         params.wckey = config["wckey"]
+    if "python_exe" in config:
+        params.python_exe = config["python_exe"]
     params.ntasks = 1
 
     current_file_dir = os.path.dirname(__file__)

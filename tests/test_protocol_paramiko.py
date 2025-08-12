@@ -49,6 +49,10 @@ def test_protocol_paramiko(remote_args: dict[str, typing.Any]) -> None:
     connect_param = pybatch.ConnectionParameters(
         host=hostname, gss_auth=gss_auth
     )
+    if "python_exe" in remote_args:
+        python_exe = remote_args["python_exe"]
+    else:
+        python_exe = "python3"
     p = pybatch.protocols.paramiko.ParamikoProtocol(connect_param)
     local_work_dir = tempfile.mkdtemp(suffix="_pybatchtest")
     test_file_name = "paramiko_test.txt"
@@ -114,24 +118,24 @@ def test_protocol_paramiko(remote_args: dict[str, typing.Any]) -> None:
     assert Path(local_test_file_bis).read_text() == file_content
 
     # run
-    command = ["python3", "-c", 'print("Cool!")']
+    command = [python_exe, "-c", 'print("Cool!")']
     res = p.run(command)
     assert res.strip() == "Cool!"
 
     # run error
-    command = ["python3", "-c", "exit(1)"]
+    command = [python_exe, "-c", "exit(1)"]
     try:
         res = p.run(command)
     except pybatch.PybatchException as e:
         assert "Error 1" in str(e)
-        assert "command: python3 -c 'exit(1)'" in str(e)
+        assert f"command: {python_exe} -c 'exit(1)'" in str(e)
     else:
         assert 0
 
     # remove remote files
     pycommand = f'import os; os.remove("{remote_test_file}")'
-    p.run(["python3", "-c", pycommand])
+    p.run([python_exe, "-c", pycommand])
     pycommand = f'import os; os.remove("{remote_test_file_bis}")'
-    p.run(["python3", "-c", pycommand])
+    p.run([python_exe, "-c", pycommand])
 
     shutil.rmtree(local_work_dir)
