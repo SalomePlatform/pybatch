@@ -32,6 +32,7 @@ import os
 import signal
 import socket
 import functools
+import sys
 
 
 def handler(
@@ -78,25 +79,10 @@ class Job(GenericJob):
         a daemon mode.
         """
         self._prepare_run()
-        r_pipe, w_pipe = os.pipe()
-        pid = os.fork()
-        if pid > 0:
-            # father side - get pid of the grand child
-            self.pid = int(os.fdopen(r_pipe).readline().strip())
-            return
-        # double fork for daemon creation
-        try:
-            pid = os.fork()
-            if pid > 0:
-                # child side
-                try:
-                    os.write(w_pipe, f"{pid}\n".encode())
-                finally:
-                    os._exit(0)  # ensure child ends here!
-            # actual daemon
-            self._run()
-        finally:
-            os._exit(0)  # ensure grand child ends here!
+        if hasattr(os, "fork"):
+            self._posix_submit()
+        else:
+            self._windows_submit()
 
     def wait(self) -> None:
         "Wait until the end of the job."
@@ -140,6 +126,12 @@ class Job(GenericJob):
     def cancel(self) -> None:
         "Stop the job."
         pu = psutil.Process(self.pid)
+        children = pu.children(recursive=True)
+        for p in children:
+            try:
+                p.terminate()
+            except psutil.NoSuchProcess:
+                pass
         pu.terminate()
 
     def get(self, remote_paths: list[str], local_path: str | Path) -> None:
@@ -189,6 +181,27 @@ class Job(GenericJob):
         log_path = Path(self.work_directory) / "logs"
         log_path.mkdir(parents=True, exist_ok=True)
 
+    def _posix_submit(self) -> None:
+        r_pipe, w_pipe = os.pipe()
+        pid = os.fork()
+        if pid > 0:
+            # father side - get pid of the grand child
+            self.pid = int(os.fdopen(r_pipe).readline().strip())
+            return
+        # double fork for daemon creation
+        try:
+            pid = os.fork()
+            if pid > 0:
+                # child side
+                try:
+                    os.write(w_pipe, f"{pid}\n".encode())
+                finally:
+                    os._exit(0)  # ensure child ends here!
+            # actual daemon
+            self._run()
+        finally:
+            os._exit(0)  # ensure grand child ends here!
+
     def _run(self) -> None:
         # daemonize process
         os.setsid()
@@ -217,8 +230,27 @@ class Job(GenericJob):
         with open(exit_log, "w") as exit_file:
             exit_file.write(str(exit_code))
 
-    # A réfléchir, mais il vaut peut-être mieux utiliser la sérialisation
-    # pickle.
-    # def dump(self) -> str:
-    # " Serialization of the job."
-    # ...
+    def _windows_submit(self) -> None:
+        # Windows implementation : never join the child.
+        # flags DETACHED_PROCESS & CREATE_NEW_PROCESS_GROUP are windows specific
+        log_path = Path(self.work_directory) / "logs"
+        stdout_log = log_path / "output.log"
+        stderr_log = log_path / "error.log"
+        # check rights
+        stdout_log.touch()
+        stderr_log.touch()
+
+        command = [sys.executable, "-m", "pybatch.plugins.local.executor"]
+        if self.wall_time is None:
+            wall_time = "0"
+        else:
+            wall_time = repr(self.wall_time)
+        command.append(wall_time)
+        command.extend(self.command)
+        proc = subprocess.Popen(
+            command,
+            cwd=self.work_directory,
+            creationflags=subprocess.DETACHED_PROCESS  # type: ignore
+            | subprocess.CREATE_NEW_PROCESS_GROUP,  # type: ignore
+        )
+        self.pid = proc.pid

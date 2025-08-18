@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 # Copyright (C) 2025  CEA, EDF
 #
 # This library is free software; you can redistribute it and/or
@@ -41,6 +40,35 @@ import socket
 global interrupted
 interrupted = False
 
+try:
+    import psutil
+
+    def process_exists(pid):
+        return psutil.pid_exists(pid)
+
+    def process_kill(pid):
+        parent = psutil.Process(pid)
+        children = parent.children(recursive=True)
+        for p in children:
+            try:
+                p.terminate()
+            except psutil.NoSuchProcess:
+                pass
+        parent.terminate()
+
+except ModuleNotFoundError:
+
+    def process_exists(pid):
+        proc_exists = True
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            proc_exists = False
+        return proc_exists
+
+    def process_kill(pid):
+        os.kill(pid, signal.SIGTERM)
+
 
 def handler(proc, signum, frame):
     proc.terminate()
@@ -51,12 +79,16 @@ def handler(proc, signum, frame):
 def run_one_job(workdir, command, wall_time, log_path, stdout_log, stderr_log):
     # file descriptors are automaticaly closed by default
     # (see close_fds argument of Popen).
-    stdout_file = open(str(stdout_log), "w")  # python 3.5
-    stderr_file = open(str(stderr_log), "w")  # python 3.5
+    stdout_file = open(stdout_log, "w")  # python 3.5
+    stderr_file = open(stderr_log, "w")  # python 3.5
     message = "Launch command: " + str(command)
     logging.info(message)
     proc = subprocess.Popen(
-        command, stdout=stdout_file, stderr=stderr_file, cwd=workdir
+        command,
+        stdout=stdout_file,
+        stderr=stderr_file,
+        cwd=workdir,
+        creationflags=0,
     )
     signal.signal(signal.SIGTERM, functools.partial(handler, proc))
     try:
@@ -85,8 +117,8 @@ def run_many_jobs(
     for idx in range(total_jobs):
         # file descriptors are automaticaly closed by default
         # (see close_fds argument of Popen).
-        stdout_file = open(str(stdout_log), "a")  # python 3.5
-        stderr_file = open(str(stderr_log), "a")  # python 3.5
+        stdout_file = open(stdout_log, "a")  # python 3.5
+        stderr_file = open(stderr_log, "a")  # python 3.5
         current_command = command + [str(idx)]
         message = "Launch command[{}]: {}"
         message = message.format(idx, current_command)
@@ -110,6 +142,103 @@ def run_many_jobs(
     exit_log = str(log_path / "exit_code.log")  # python 3.5
     with open(exit_log, "w") as exit_file:
         exit_file.write(str(global_exit_code))
+
+
+def run(
+    workdir,
+    wall_time,
+    total_jobs,
+    max_simul_jobs,
+    command,
+):
+    log_path = Path(workdir) / "logs"
+    stdout_log = str(log_path / "output.log")
+    stderr_log = str(log_path / "error.log")
+    manager_log = str(log_path / "manager.log")
+    if not wall_time:
+        wall_time = None
+
+    log = open(manager_log, "w")  # python 3.5
+    # std redirection
+    os.dup2(log.fileno(), sys.stdout.fileno())
+    os.dup2(log.fileno(), sys.stderr.fileno())
+    os.dup2(os.open(os.devnull, os.O_RDWR), sys.stdin.fileno())
+
+    if total_jobs > 1:
+        run_many_jobs(
+            workdir,
+            command,
+            wall_time,
+            log_path,
+            stdout_log,
+            stderr_log,
+            total_jobs,
+            max_simul_jobs,
+        )
+    else:
+        run_one_job(
+            workdir, command, wall_time, log_path, stdout_log, stderr_log
+        )
+
+
+def posix_submit(
+    workdir,
+    wall_time,
+    total_jobs,
+    max_simul_jobs,
+    command,
+):
+    pid = os.fork()
+    if pid > 0:
+        # father side
+        logging.info("Jobid " + str(pid))
+        print(pid)
+        return
+    # child side
+    os.setsid()
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
+    run(workdir, wall_time, total_jobs, max_simul_jobs, command)
+
+
+def windows_submit(
+    workdir,
+    wall_time,
+    total_jobs,
+    max_simul_jobs,
+    command,
+):
+    "Used for windows, when fork is not available."
+    current_script = __file__
+    py_exe = sys.executable
+    if wall_time is None:
+        wall_time = 0
+    run_command = [
+        py_exe,
+        current_script,
+        "run",
+        workdir,
+        str(wall_time),
+        str(total_jobs),
+        str(max_simul_jobs),
+    ]
+    run_command.extend(command)
+    logging.info(str(run_command))
+    stdout_file = open(
+        str(Path(workdir) / "logs" / "submit_std.log"), "w"
+    )  # python 3.5
+    stderr_file = open(
+        str(Path(workdir) / "logs" / "submit_err.log"), "w"
+    )  # python 3.5
+    proc = subprocess.Popen(
+        run_command,
+        cwd=workdir,
+        stdout=stdout_file,
+        stderr=stderr_file,
+        # Windows specific flags.
+        creationflags=subprocess.DETACHED_PROCESS
+        | subprocess.CREATE_NEW_PROCESS_GROUP,
+    )
+    print(proc.pid)
 
 
 def submit(workdir, command, wall_time, ntasks, total_jobs, max_simul_jobs):
@@ -139,37 +268,10 @@ def submit(workdir, command, wall_time, ntasks, total_jobs, max_simul_jobs):
         nodefile.write_text(nodelist)
 
     # execute in detached mode
-    pid = os.fork()
-    if pid > 0:
-        # father side
-        logging.info("Jobid " + str(pid))
-        print(pid)
-        return
-    # child side
-    os.setsid()
-    signal.signal(signal.SIGHUP, signal.SIG_IGN)
-
-    log = open(str(manager_log), "w")  # python 3.5
-    # std redirection
-    os.dup2(log.fileno(), sys.stdout.fileno())
-    os.dup2(log.fileno(), sys.stderr.fileno())
-    os.dup2(os.open(os.devnull, os.O_RDWR), sys.stdin.fileno())
-
-    if total_jobs > 1:
-        run_many_jobs(
-            workdir,
-            command,
-            wall_time,
-            log_path,
-            stdout_log,
-            stderr_log,
-            total_jobs,
-            max_simul_jobs,
-        )
+    if hasattr(os, "fork"):
+        posix_submit(workdir, wall_time, total_jobs, max_simul_jobs, command)
     else:
-        run_one_job(
-            workdir, command, wall_time, log_path, stdout_log, stderr_log
-        )
+        windows_submit(workdir, wall_time, total_jobs, max_simul_jobs, command)
 
 
 def wait(proc_id):
@@ -177,14 +279,8 @@ def wait(proc_id):
     logging.info("Wait jobid " + str(proc_id))
     import time
 
-    proc_exists = True
-    while proc_exists:
-        try:
-            os.kill(proc_id, 0)
-        except ProcessLookupError:
-            proc_exists = False
-        else:
-            time.sleep(0.1)
+    while process_exists(proc_id):
+        time.sleep(0.1)
     logging.info("Wait finished.")
 
 
@@ -195,11 +291,7 @@ def state(proc_id, workdir):
     of this script.
     """
     logging.info("state jobid " + str(proc_id))
-    proc_exists = True
-    try:
-        os.kill(proc_id, 0)
-    except ProcessLookupError:
-        proc_exists = False
+    proc_exists = process_exists(proc_id)
     if proc_exists:
         logging.info("state RUNNING")
         print("RUNNING")
@@ -222,7 +314,7 @@ def cancel(proc_id):
     "Kill the process."
     logging.info("cancel jobid " + str(proc_id))
     try:
-        os.kill(proc_id, signal.SIGTERM)
+        process_kill(proc_id)
     except Exception:
         # TODO
         logging.info("cancel kill failed!")
@@ -235,6 +327,7 @@ def main(args_list=None):
         help="Use mode.",
     )
 
+    # SUBMIT
     parser_submit = subparsers.add_parser(
         "submit", help="Start a job and print the pid."
     )
@@ -265,17 +358,40 @@ def main(args_list=None):
     )
     parser_submit.add_argument("command", nargs="+", help="Command to submit.")
 
+    # RUN
+    parser_run = subparsers.add_parser("run", help="Run in background.")
+    parser_run.add_argument("work_dir", help="Work directory.")
+    parser_run.add_argument(
+        "wall_time",
+        type=int,
+        help="Maximum execution time in seconds.",
+    )
+    parser_run.add_argument(
+        "total_jobs",
+        type=int,
+        help="Number of jobs to launch.",
+    )
+    parser_run.add_argument(
+        "max_simul_jobs",
+        type=int,
+        help="For future use. Parameter ignored.",
+    )
+    parser_run.add_argument("command", nargs="+", help="Command to submit.")
+
+    # WAIT
     parser_wait = subparsers.add_parser(
         "wait", help="Wait for the end of a job."
     )
     parser_wait.add_argument("proc", type=int, help="Process id.")
 
+    # STATE
     parser_state = subparsers.add_parser(
         "state", help="Print the state of a job."
     )
     parser_state.add_argument("proc", type=int, help="Process id.")
     parser_state.add_argument("work_dir", help="Work directory.")
 
+    # CANCEL
     parser_cancel = subparsers.add_parser("cancel", help="Cancel a job.")
     parser_cancel.add_argument("proc", type=int, help="Process id.")
 
@@ -295,6 +411,16 @@ def main(args_list=None):
         state(args.proc, args.work_dir)
     elif args.mode == "cancel":
         cancel(args.proc)
+    elif args.mode == "run":
+        run(
+            args.work_dir,
+            args.wall_time,
+            args.total_jobs,
+            args.max_simul_jobs,
+            args.command,
+        )
+    else:
+        print("No command defined!")
 
 
 def log_config():

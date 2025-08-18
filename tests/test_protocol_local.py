@@ -49,7 +49,7 @@ def test_protocol_local() -> None:
     try:
         p.create("/no/directory/", "file content")
     except FileNotFoundError as e:
-        assert "/no/directory" in str(e)
+        assert "directory" in str(e)
     else:
         assert 0
 
@@ -66,7 +66,7 @@ def test_protocol_local() -> None:
     try:
         p.download([remote_test_file], local_wrong_path)
     except FileNotFoundError as e:
-        assert local_wrong_path in str(e)
+        assert "nodir" in str(e)
     else:
         assert 0
 
@@ -74,7 +74,7 @@ def test_protocol_local() -> None:
     try:
         p.upload([local_wrong_path], work_dir)
     except pybatch.PybatchException as e:
-        assert local_wrong_path in str(e)
+        assert "nodir" in str(e)
     else:
         assert 0
 
@@ -82,7 +82,7 @@ def test_protocol_local() -> None:
     try:
         p.upload([local_test_file], "/no/directory/")
     except FileNotFoundError as e:
-        assert "/no/directory/" in str(e)
+        assert "directory" in str(e)
     else:
         assert 0
 

@@ -34,7 +34,6 @@ class Job(GenericJob):
         else:
             self.protocol = protocol
         self.jobid = ""
-        self.remote_python_exe = param.python_exe
         self.remote_manager_path = path_join(
             param.work_directory, "pybatch_manager.py", is_posix=param.is_posix
         )
@@ -42,16 +41,18 @@ class Job(GenericJob):
     def submit(self) -> None:
         try:
             logdir = path_join(
-                self.job_params.work_directory, "logs", is_posix=True
+                self.job_params.work_directory,
+                "logs",
+                is_posix=self.job_params.is_posix,
             )
-            remote_mkdir(self.protocol, logdir, self.remote_python_exe)
+            remote_mkdir(self.protocol, logdir, self.job_params.python_exe)
 
             file_dir = Path(os.path.dirname(__file__))
             manager_script = file_dir / "pybatch_manager.py"
             input_files = self.job_params.input_files + [manager_script]
             self.protocol.upload(input_files, self.job_params.work_directory)
             command = [
-                self.remote_python_exe,
+                self.job_params.python_exe,
                 self.remote_manager_path,
                 "submit",
                 self.job_params.work_directory,
@@ -82,7 +83,7 @@ class Job(GenericJob):
             return
         try:
             command = [
-                self.remote_python_exe,
+                self.job_params.python_exe,
                 self.remote_manager_path,
                 "wait",
                 self.jobid,
@@ -97,7 +98,7 @@ class Job(GenericJob):
             return "CREATED"
         try:
             command = [
-                self.remote_python_exe,
+                self.job_params.python_exe,
                 self.remote_manager_path,
                 "state",
                 self.jobid,
@@ -128,7 +129,7 @@ class Job(GenericJob):
             return
         try:
             command = [
-                self.remote_python_exe,
+                self.job_params.python_exe,
                 self.remote_manager_path,
                 "cancel",
                 self.jobid,

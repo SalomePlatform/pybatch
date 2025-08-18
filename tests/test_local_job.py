@@ -25,6 +25,7 @@ import tempfile
 from pathlib import Path
 import shutil
 import os
+import sys
 
 import tests.job_cases
 
@@ -36,11 +37,9 @@ def local_case_config(
         work_dir = os.path.join(config["work_dir"], case_name + "_" + plugin)
     else:
         work_dir = tempfile.mkdtemp(suffix="_pybatchtest")
-    params = pybatch.LaunchParameters([], work_dir)
+    params = pybatch.LaunchParameters([], work_dir, python_exe=sys.executable)
     if "wckey" in config:
         params.wckey = config["wckey"]
-    if "python_exe" in config:
-        params.python_exe = config["python_exe"]
     params.ntasks = 1
 
     current_file_dir = os.path.dirname(__file__)

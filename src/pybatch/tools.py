@@ -134,6 +134,6 @@ def remote_mkdir(protocol: GenericProtocol, dir: str, python_exe: str) -> None:
     :param dir: Path of the remote directory to be created.
     :param python_exe: Path to the python executable on the remote server.
     """
-    py_script = f"from pathlib import Path; Path('{dir}').mkdir(parents=True, exist_ok=True)"
+    py_script = f"from pathlib import Path; Path({repr(dir)}).mkdir(parents=True, exist_ok=True)"
     command = [python_exe, "-c", py_script]
     protocol.run(command)

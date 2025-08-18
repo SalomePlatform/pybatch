@@ -36,8 +36,13 @@ def test_python_script(job_plugin):
     workdir = tempfile.mkdtemp(suffix="_pybatchtest")
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "hello.py"
+    is_posix = os.name == "posix"
     params = pybatch.LaunchParameters(
-        [sys.executable, "hello.py", "world"], workdir, input_files=[script]
+        [sys.executable, "hello.py", "world"],
+        workdir,
+        input_files=[script],
+        python_exe=sys.executable,
+        is_posix=is_posix,
     )
     job = pybatch.create_job(job_plugin, params)
     job.submit()
@@ -56,12 +61,17 @@ def test_finish_without_wait(job_plugin):
     workdir = tempfile.mkdtemp(suffix="_pybatchtest")
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "hello.py"
+    is_posix = os.name == "posix"
     params = pybatch.LaunchParameters(
-        [sys.executable, "hello.py", "world"], workdir, input_files=[script]
+        [sys.executable, "hello.py", "world"],
+        workdir,
+        input_files=[script],
+        python_exe=sys.executable,
+        is_posix=is_posix,
     )
     job = pybatch.create_job(job_plugin, params)
     job.submit()
-    time.sleep(1)  # instead of job.wait()
+    time.sleep(2)  # instead of job.wait()
     assert job.state() == "FINISHED"
     shutil.rmtree(workdir)
 
@@ -76,8 +86,13 @@ def test_error_script(job_plugin):
     workdir = tempfile.mkdtemp(suffix="_pybatchtest")
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "error.py"
+    is_posix = os.name == "posix"
     params = pybatch.LaunchParameters(
-        [sys.executable, "error.py"], workdir, input_files=[script]
+        [sys.executable, "error.py"],
+        workdir,
+        input_files=[script],
+        python_exe=sys.executable,
+        is_posix=is_posix,
     )
     job = pybatch.create_job(job_plugin, params)
     job.submit()
@@ -96,8 +111,13 @@ def test_state(job_plugin):
     workdir = tempfile.mkdtemp(suffix="_pybatchtest")
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "sleep.py"
+    is_posix = os.name == "posix"
     params = pybatch.LaunchParameters(
-        [sys.executable, "sleep.py", "1"], workdir, input_files=[script]
+        [sys.executable, "sleep.py", "1"],
+        workdir,
+        input_files=[script],
+        python_exe=sys.executable,
+        is_posix=is_posix,
     )
     job = pybatch.create_job(job_plugin, params)
     assert job.state() == "CREATED"
@@ -118,8 +138,13 @@ def test_cancel(job_plugin):
     workdir = tempfile.mkdtemp(suffix="_pybatchtest")
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "sleep.py"
+    is_posix = os.name == "posix"
     params = pybatch.LaunchParameters(
-        [sys.executable, "sleep.py", "2"], workdir, input_files=[script]
+        [sys.executable, "sleep.py", "2"],
+        workdir,
+        input_files=[script],
+        python_exe=sys.executable,
+        is_posix=is_posix,
     )
     job = pybatch.create_job(job_plugin, params)
     assert job.state() == "CREATED"
@@ -129,7 +154,7 @@ def test_cancel(job_plugin):
     job.wait()
     time.sleep(2)  # sleep.py would have had the time to finish if not canceled.
     assert not (Path(workdir) / "wakeup.txt").exists()
-    assert job.exit_code() == -15  # not sure for Windows
+    assert job.exit_code() != 0
     shutil.rmtree(workdir)
 
 
@@ -141,8 +166,13 @@ def test_serialization(job_plugin):
     workdir = tempfile.mkdtemp(suffix="_pybatchtest")
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "sleep.py"
+    is_posix = os.name == "posix"
     params = pybatch.LaunchParameters(
-        [sys.executable, "sleep.py", "1"], workdir, input_files=[script]
+        [sys.executable, "sleep.py", "1"],
+        workdir,
+        input_files=[script],
+        python_exe=sys.executable,
+        is_posix=is_posix,
     )
     job = pybatch.create_job(job_plugin, params)
     job.submit()
@@ -161,17 +191,20 @@ def test_wall_time(job_plugin):
     workdir = tempfile.mkdtemp(suffix="_pybatchtest")
     current_file_dir = os.path.dirname(__file__)
     script = Path(current_file_dir) / "scripts" / "sleep.py"
+    is_posix = os.name == "posix"
     params = pybatch.LaunchParameters(
         [sys.executable, "sleep.py", "3"],
         workdir,
         input_files=[script],
         wall_time="0:1",  # 1s
+        python_exe=sys.executable,
+        is_posix=is_posix,
     )
     job = pybatch.create_job(job_plugin, params)
     job.submit()
     job.wait()
     assert not (Path(workdir) / "wakeup.txt").exists()
-    assert job.exit_code() == -15  # not sure for Windows
+    assert job.exit_code() != 0  # return value is OS specific
     shutil.rmtree(workdir)
 
 
@@ -185,10 +218,13 @@ def test_files_and_directories(job_plugin):
     script = Path(current_file_dir) / "scripts" / "code.py"
     file_input = Path(current_file_dir) / "data" / "input.txt"
     dir_input = Path(current_file_dir) / "data" / "data"
+    is_posix = os.name == "posix"
     params = pybatch.LaunchParameters(
         [sys.executable, "code.py", "1"],
         workdir,
         input_files=[script, file_input, dir_input],
+        python_exe=sys.executable,
+        is_posix=is_posix,
     )
     job = pybatch.create_job(job_plugin, params)
     job.submit()

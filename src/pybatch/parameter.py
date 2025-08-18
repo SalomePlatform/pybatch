@@ -53,7 +53,7 @@ class LaunchParameters:
         job.
       * input_files - list of local files to be copied to remote work_directory.
       * is_posix - Unix like server (True) or Windows server (False).
-      * python_exe - path to the python executable.
+      * python_exe - path to the python executable. Default to "python3".
       * create_nodefile - create LIBBATCH_NODEFILE which contains the list of
         allocated nodes.
     """
