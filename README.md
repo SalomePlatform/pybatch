@@ -1,9 +1,18 @@
 # pybatch
 Pybatch is a python module to submit jobs on a remote server managed by a batch manager such as Slurm, PBS, etc.
 
+For the moment, the supported batch managers are:
+- 'slurm'
+- 'nobatch' - built in minimalistic solution when no batch manager is available.
+
 # Install
-For the installation, you can download the sources and use python package installers such as 'pip' to install from sources.
+For installation, you can download the sources and use python package installers such as 'pip' to install from sources.
 You can download the sources here:
+```
+git clone https://codev-tuleap.cea.fr/plugins/git/salome/pybatch.git
+```
+
+There is also an internal repository for EDF users:
 ```
 git clone https://gitlab.pleiade.edf.fr/I35256/pybatch.git
 ```
@@ -28,6 +37,29 @@ pip install salome-pybatch[paramiko]
 ```
 With this kind of installation you can use 'ParamikoProtocol' for remote connections, which does not use any external program.
 
+'ParamikoProtocol' is more efficient than 'SshProtocol', because it uses a single
+ssh session and a single authetication for the management of the whole job, while
+'SshProtocol' needs a new connection with a new authentication for every operation.
+
+## Development tools
+The development evironment can be installed by :
+```
+pip install salome-pybatch[dev]
+```
+The main development tool is 'tox', which manages the environments for tests,
+documentation generation and code quality checks.
+
+# Exemple of use
+
+[Use case with comments.](doc/examples/use_case.py)
+
+# Documentation
+The documentation can be generated from sources, in the source directory, with:
+```
+tox -e docs
+firefox build/docs/interface/html/index.html
+```
+
 # Tests
 Pybatch tests use 'pytest' for execution and 'tox' for the management of the python environment.
 There are three kinds of tests :
@@ -45,7 +77,3 @@ tox -e test -- --user-config-file=path/to/config_tests.toml
 ```
 The configuration file defines the adress of the remote server, the type of tests that could be run and some other data needed by the test.
 An example of configuration file is available [here](doc/examples/config_tests.toml).
-
-# Exemple of use
-
-[Use case with comments.](doc/examples/use_case.py)
