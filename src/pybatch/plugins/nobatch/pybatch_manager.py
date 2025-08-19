@@ -57,7 +57,7 @@ try:
         parent.terminate()
 
 except ModuleNotFoundError:
-
+    # Implementation if psutil is not available on the server side.
     def process_exists(pid):
         proc_exists = True
         try:

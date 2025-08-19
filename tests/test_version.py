@@ -19,7 +19,7 @@
 def test_version():
     import pybatch
 
-    assert pybatch.__version__ == "0.0"
+    assert pybatch.__version__ == "1.0"
 
 
 def test_plugin():

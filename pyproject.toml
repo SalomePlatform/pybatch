@@ -20,7 +20,7 @@ requires-python = ">=3.9"
 dependencies = [
     "psutil"
 ]
-version = "0.0"
+version = "1.0"
 
 [project.scripts]
 
