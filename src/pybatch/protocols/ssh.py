@@ -41,8 +41,8 @@ class SshProtocol:
         destination = ""
         if self._user:
             destination += self._user + "@"
-        destination += self._host + ':"' + remote_path + '"'
-        full_command.append(destination)
+        destination += self._host + ":" + remote_path
+        full_command.append(escape_str(destination))
         run_check(full_command)
 
     def download(
@@ -55,7 +55,7 @@ class SshProtocol:
         remote_id += self._host + ":"
         for entry in remote_entries:
             full_command = command + [
-                remote_id + '"' + entry + '"',
+                escape_str(remote_id + entry),
                 str(local_path),
             ]
             run_check(full_command)

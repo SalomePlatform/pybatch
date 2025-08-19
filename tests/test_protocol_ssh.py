@@ -56,6 +56,10 @@ def test_protocol_ssh(remote_args: dict[str, typing.Any]) -> None:
     connect_param = pybatch.ConnectionParameters(
         host=hostname, gss_auth=gss_auth
     )
+    if "user" in remote_args:
+        connect_param.user = remote_args["user"]
+    if "password" in remote_args:
+        connect_param.password = remote_args["password"]
     p = pybatch.protocols.ssh.SshProtocol(connect_param)
     local_work_dir = tempfile.mkdtemp(suffix="_pybatchtest")
     test_file_name = "ssh_test.txt"
@@ -92,7 +96,9 @@ def test_protocol_ssh(remote_args: dict[str, typing.Any]) -> None:
     try:
         p.download([remote_test_file], local_wrong_path)
     except pybatch.PybatchException as e:
-        assert local_wrong_path in str(e)
+        # assert compatible Linux & Windows
+        assert "nodir" in str(e)
+        assert "nofile" in str(e)
     else:
         assert 0
 
@@ -100,7 +106,9 @@ def test_protocol_ssh(remote_args: dict[str, typing.Any]) -> None:
     try:
         p.upload([local_wrong_path], work_dir)
     except pybatch.PybatchException as e:
-        assert local_wrong_path in str(e)
+        # assert compatible Linux & Windows
+        assert "nodir" in str(e)
+        assert "nofile" in str(e)
     else:
         assert 0
 

@@ -53,6 +53,10 @@ def test_protocol_paramiko(remote_args: dict[str, typing.Any]) -> None:
         python_exe = remote_args["python_exe"]
     else:
         python_exe = "python3"
+    if "user" in remote_args:
+        connect_param.user = remote_args["user"]
+    if "password" in remote_args:
+        connect_param.password = remote_args["password"]
     p = pybatch.protocols.paramiko.ParamikoProtocol(connect_param)
     local_work_dir = tempfile.mkdtemp(suffix="_pybatchtest")
     test_file_name = "paramiko_test.txt"
@@ -97,7 +101,9 @@ def test_protocol_paramiko(remote_args: dict[str, typing.Any]) -> None:
     try:
         p.upload([local_wrong_path], work_dir)
     except FileNotFoundError as e:
-        assert local_wrong_path in str(e)
+        # assert compatible Linux & Windows
+        assert "nodir" in str(e)
+        assert "nofile" in str(e)
     else:
         assert 0
 
