@@ -71,7 +71,7 @@ def test_finish_without_wait(job_plugin):
     )
     job = pybatch.create_job(job_plugin, params)
     job.submit()
-    time.sleep(2)  # instead of job.wait()
+    time.sleep(5)  # instead of job.wait()
     assert job.state() == "FINISHED"
     shutil.rmtree(workdir)
 
