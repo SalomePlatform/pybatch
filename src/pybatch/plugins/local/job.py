@@ -240,7 +240,7 @@ class Job(GenericJob):
         stdout_log.touch()
         stderr_log.touch()
 
-        command = [sys.executable, "-m", "pybatch.plugins.local.executor"]
+        command = ["python", "-m", "pybatch.plugins.local.executor"]
         if self.wall_time is None:
             wall_time = "0"
         else:

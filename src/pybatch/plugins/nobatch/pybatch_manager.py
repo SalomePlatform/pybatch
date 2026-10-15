@@ -209,7 +209,7 @@ def windows_submit(
 ):
     "Used for windows, when fork is not available."
     current_script = __file__
-    py_exe = sys.executable
+    py_exe = "python"
     if wall_time is None:
         wall_time = 0
     run_command = [
