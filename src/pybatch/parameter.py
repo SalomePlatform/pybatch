@@ -76,8 +76,15 @@ class LaunchParameters:
     extra_as_list: list[str] = field(default_factory=list)
     input_files: list[str | Path] = field(default_factory=list)
     is_posix: bool = True
-    python_exe: str = "python3"
+    python_exe: str = ""
     create_nodefile: bool = False
+
+    def __post_init__(self):
+        if not self.python_exe :
+            if self.is_posix:
+                self.python_exe = "python3"
+            else:
+                self.python_exe = "python"
 
 
 @dataclass

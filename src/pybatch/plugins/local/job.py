@@ -59,6 +59,7 @@ class Job(GenericJob):
     def __init__(self, param: LaunchParameters):
         self.command = param.command
         self.work_directory = param.work_directory
+        self.python_exe = param.python_exe
         self.input_files = param.input_files
         seconds_str = slurm_time_to_seconds(param.wall_time)
         if not seconds_str:
@@ -240,7 +241,7 @@ class Job(GenericJob):
         stdout_log.touch()
         stderr_log.touch()
 
-        command = ["python", "-m", "pybatch.plugins.local.executor"]
+        command = [self.python_exe, "-m", "pybatch.plugins.local.executor"]
         if self.wall_time is None:
             wall_time = "0"
         else:
